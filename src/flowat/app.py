@@ -5,6 +5,8 @@ Acompanhe o fluxo de caixa de sua empresa com facilidade.
 import toga
 from toga.style.pack import COLUMN, ROW
 
+from flowat import pages
+
 
 class Flowat(toga.App):
     def startup(self):
@@ -14,7 +16,8 @@ class Flowat(toga.App):
         We then create a main window (with a name matching the app), and
         show the main window.
         """
-        main_box = toga.Box()
+        self.main_page = pages.main.MainSection()
+        main_box = self.main_page.full_contents
 
         self.main_window = toga.MainWindow(title=self.formal_name)
         self.main_window.content = main_box
