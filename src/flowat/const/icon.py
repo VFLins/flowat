@@ -11,14 +11,17 @@ CIRCLE_PLUS = Icon(
     path=Path(_RESOURCES_DIR, "circle-plus"), system=True
 )
 SCAN_SEARCH = Icon(
-    path=Path(_RESOURCES_DIR, "scan-search"), system=True
+    path=Path(_RESOURCES_DIR, "scan-search-32"), system=True
 )
 MONEY_IN = Icon(
-    path=Path(_RESOURCES_DIR, "money-in"), system=True
+    path=Path(_RESOURCES_DIR, "money-in-32"), system=True
 )
 MONEY_OUT = Icon(
-    path=Path(_RESOURCES_DIR, "money-out"), system=True
+    path=Path(_RESOURCES_DIR, "money-out-32"), system=True
+)
+BAR_CHART = Icon(
+    path=Path(_RESOURCES_DIR, "chart-column-32"), system=True
 )
 SETTINGS = Icon(
-    path=Path(_RESOURCES_DIR, "settings"), system=True
+    path=Path(_RESOURCES_DIR, "settings-32"), system=True
 )

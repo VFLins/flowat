@@ -14,22 +14,49 @@ class MainSection(BaseSection):
         self.add_expense_button = Column(
             style=Pack(align_items="center"),
             children=[
-                Button(icon=icon.MONEY_OUT, style=style.BIG_SQUARE_BUTTON),
-                Label("Inserir um gasto", style=Pack(text_align="center", font_size=10, width=120)),
+                Button(
+                    icon=icon.MONEY_OUT,
+                    id="expenses_button",
+                    style=style.BIG_SQUARE_BUTTON,
+                    on_press=self.set_context_content,
+                ),
+                Label("Gastos", style=Pack(text_align="center", width=120)),
             ]
         )
         self.add_revenue_button = Column(
             style=Pack(align_items="center"),
             children=[
-                Button(icon=icon.MONEY_IN, style=style.BIG_SQUARE_BUTTON),
-                Label("Inserir uma receita", style=Pack(text_align="center", font_size=10, width=160)),
+                Button(
+                    icon=icon.MONEY_IN,
+                    id="revenue_button",
+                    style=style.BIG_SQUARE_BUTTON,
+                    on_press=self.set_context_content,
+                ),
+                Label("Receitas", style=Pack(text_align="center", width=120)),
             ]
         )
-        self.fetch_revenue_button = Column(
+        self.report_button = Column(
             style=Pack(align_items="center"),
             children=[
-                Button(icon=icon.SETTINGS, style=style.BIG_SQUARE_BUTTON),
-                Label("Preferências", style=Pack(text_align="center", font_size=10, width=120)),
+                Button(
+                    icon=icon.BAR_CHART,
+                    id="reports_button",
+                    style=style.BIG_SQUARE_BUTTON,
+                    on_press=self.set_context_content,
+                ),
+                Label("Relatórios", style=Pack(text_align="center", width=120)),
+            ]
+        )
+        self.preferences_button = Column(
+            style=Pack(align_items="center"),
+            children=[
+                Button(
+                    icon=icon.SETTINGS,
+                    id="preferences_button",
+                    style=style.BIG_SQUARE_BUTTON,
+                    on_press=self.set_context_content,
+                ),
+                Label("Preferências", style=Pack(text_align="center", width=120)),
             ]
         )
 
@@ -37,10 +64,14 @@ class MainSection(BaseSection):
             children=[
                 self.add_expense_button,
                 self.add_revenue_button,
-                self.fetch_revenue_button,
+                self.report_button,
+                self.preferences_button,
             ],
         )
         self.full_contents = Box(
-            style=Pack(align_items="start", flex=1, direction="column"),
+            style=Pack(align_items="center", flex=1, direction="column"),
             children=[self.buttons_container],
         )
+
+    def set_context_content(self, widget:Button):
+        print(f"Changing context to: {widget.id}")
