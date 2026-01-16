@@ -1,4 +1,5 @@
 from toga.icons import Icon
+from toga.images import Image
 from pathlib import Path
 
 
@@ -25,3 +26,5 @@ BAR_CHART = Icon(
 SETTINGS = Icon(
     path=Path(_RESOURCES_DIR, "settings-32"), system=True
 )
+
+#MONEY_IN_IMG = Image(path=Path(_RESOURCES_DIR, "money-in"))

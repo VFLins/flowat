@@ -6,11 +6,12 @@ from toga.widgets.optioncontainer import OptionContainer
 from toga.style import Pack
 
 from .base import BaseSection
+from .expenses import ExpensesSection
 from flowat.const import style, icon
 
 class MainSection(BaseSection):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, app):
+        super().__init__(app=app)
         self.add_expense_button = Column(
             style=Pack(align_items="center"),
             children=[
@@ -23,6 +24,7 @@ class MainSection(BaseSection):
                 Label("Gastos", style=Pack(text_align="center", width=120)),
             ]
         )
+        self.add_expense_button.enabled = False
         self.add_revenue_button = Column(
             style=Pack(align_items="center"),
             children=[
@@ -60,6 +62,8 @@ class MainSection(BaseSection):
             ]
         )
 
+        self.expense_section = ExpensesSection(app=self._app)
+
         self.buttons_container = Row(
             children=[
                 self.add_expense_button,
@@ -68,9 +72,10 @@ class MainSection(BaseSection):
                 self.preferences_button,
             ],
         )
+        self.context_container = self.expense_section.full_contents
         self.full_contents = Box(
             style=Pack(align_items="center", flex=1, direction="column"),
-            children=[self.buttons_container],
+            children=[self.buttons_container, self.context_container],
         )
 
     def set_context_content(self, widget:Button):
