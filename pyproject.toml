@@ -7,6 +7,10 @@ url = "https://vitorlins.com.br/software/flowat"
 license.file = "LICENSE"
 author = "Vitor F. Lins"
 author_email = "vflins@live.com"
+accent_color = "#D81B60"
+primary_color = "#D81B60"
+primary_color_dark = "#D81B60"
+splash_background_color = "#D81B60"
 
 [tool.briefcase.app.flowat]
 formal_name = "Flowat"
