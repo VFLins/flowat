@@ -11,26 +11,36 @@ from flowat.const import style, icon
 class MainSection(BaseSection):
     def __init__(self):
         super().__init__()
-        self.add_expense_button = Button(
-            "Inserir uma despesa", style=style.BIG_BUTTON,
+        self.add_expense_button = Column(
+            style=Pack(align_items="center"),
+            children=[
+                Button(icon=icon.MONEY_OUT, style=style.BIG_SQUARE_BUTTON),
+                Label("Inserir um gasto", style=Pack(text_align="center", font_size=10, width=120)),
+            ]
         )
-        self.add_revenue_button = Button(
-            "Inserir uma receita", style=style.BIG_BUTTON,
+        self.add_revenue_button = Column(
+            style=Pack(align_items="center"),
+            children=[
+                Button(icon=icon.MONEY_IN, style=style.BIG_SQUARE_BUTTON),
+                Label("Inserir uma receita", style=Pack(text_align="center", font_size=10, width=160)),
+            ]
         )
-        self.fetch_revenue_button = Button(
-            "Procurar transações", style=style.BIG_BUTTON,
+        self.fetch_revenue_button = Column(
+            style=Pack(align_items="center"),
+            children=[
+                Button(icon=icon.SETTINGS, style=style.BIG_SQUARE_BUTTON),
+                Label("Preferências", style=Pack(text_align="center", font_size=10, width=120)),
+            ]
         )
 
-        self.buttons_container = Column(
-            style=Pack(align_items="center", flex=1),
+        self.buttons_container = Row(
             children=[
                 self.add_expense_button,
                 self.add_revenue_button,
-                Divider(width=180, margin=10),
                 self.fetch_revenue_button,
             ],
         )
         self.full_contents = Box(
-            style=Pack(align_items="center", flex=1),
+            style=Pack(align_items="start", flex=1, direction="column"),
             children=[self.buttons_container],
         )
