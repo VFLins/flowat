@@ -61,7 +61,7 @@ class HorizontalDateForm:
             value=value.day,
         )
 
-        self.widget = Column(
+        self.widget = Row(
             id=id,
             children=[
                 self.day_input.widget,

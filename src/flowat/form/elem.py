@@ -174,6 +174,7 @@ class FormField(Box):
         description: str | None = None,
         id: str | None = None,
         is_required: bool = False,
+        **kwargs,
     ):
         label_widget = Label(
             text=label,

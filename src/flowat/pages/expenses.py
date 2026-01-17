@@ -2,6 +2,7 @@ from toga.widgets.detailedlist import DetailedList
 from toga.widgets.imageview import ImageView
 from toga.widgets.textinput import TextInput
 from toga.widgets.selection import Selection
+from toga.widgets.divider import Divider
 from toga.widgets.button import Button
 from toga.widgets.label import Label
 from toga.widgets.box import Box, Row, Column
@@ -12,7 +13,7 @@ from datetime import date
 from .base import BaseSection
 
 from flowat.const import icon, style
-from flowat.form.date import VerticalDateForm
+from flowat.form.date import HorizontalDateForm
 from flowat.form.elem import FormField
 
 
@@ -30,7 +31,7 @@ class ExpensesSection(BaseSection):
 
         #self.image_expense = ImageView(icon.MONEY_OUT_IMG)
 
-        self.date_input = VerticalDateForm(
+        self.date_input = HorizontalDateForm(
             id="expense_form_duedate",
             value=date.today()
         )
@@ -46,21 +47,18 @@ class ExpensesSection(BaseSection):
                 style=style.BIG_BUTTON
             ),
         ])
-        self.expense_form = Row(children=[
-            Column(children=[
-                TextInput(id="expense_form_description_search", placeholder="Descrição"),
-                DetailedList(id="expense_form_description_result"),
-                Label("Categoria"),
-                Selection(id="expense_form_type_selection", items=expense_categories),
-            ]),
-            Column(children=[
-                self.date_input.widget,
-                FormField(
-                    id="expense_form_value",
-                    input_widget=TextInput,
-                    label="valor",
-                )
-            ])
+        self.expense_form = Column(style=Pack(width=480), children=[
+            TextInput(id="expense_form_description_search", placeholder="Descrição"),
+            DetailedList(id="expense_form_description_result"),
+            Label("Categoria"),
+            Selection(id="expense_form_type_selection", items=expense_categories),
+            self.date_input.widget,
+            FormField(
+                id="expense_form_value",
+                input_widget=TextInput(),
+                label="Valor",
+                placeholder="0,00",
+            )
         ])
 
         self.main_container = Box(

@@ -27,7 +27,7 @@ def user_input(widget_type: Type[Widget]) -> Pack:
     elif widget_type is NumberInput:
         return _system_based_number_input_style()
     elif widget_type is Selection:
-        return Pack(margin=(0, 5), width=110)
+        return _system_based_selection_style()
     else:
         return Pack()
 
@@ -45,11 +45,7 @@ def input_annotation(annotation_type: Literal["label", "legend"] = "label") -> P
 def number_input_width():
     if platform != "linux":
         return 70
-    width = 130
-    if width <= 160:
-        return 160
-    else:
-        return width
+    return 160
 
 
 def selection_width():
@@ -65,6 +61,13 @@ def _system_based_input_label_style() -> Pack:
     else:
         return Pack(margin=(25, 5, 2, 2), width=190)
 
+
+def _system_based_selection_style() -> Pack:
+    """OS based style for a `toga.Selection` element used as form input field."""
+    if platform == "linux":
+        return Pack(margin=(0, 5, 0, 8), width=110)
+    else:
+        return Pack(margin=(0, 5), width=110)
 
 def _system_based_number_input_style() -> Pack:
     """OS based style for a `toga.NumberInput` element used as form input field."""
