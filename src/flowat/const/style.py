@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Type, Literal
 from sys import platform
 
 from toga.style import Pack

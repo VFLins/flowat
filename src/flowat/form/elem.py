@@ -1,4 +1,4 @@
-from typing import Iterable, Callable
+from typing import Iterable, Callable, Type
 from decimal import Decimal
 import asyncio
 
@@ -13,6 +13,7 @@ from toga.widgets.textinput import TextInput
 from toga.widgets.numberinput import NumberInput
 from toga.widgets.detailedlist import DetailedList
 
+from flowat.const.style import input_annotation, user_input
 
 class _LabeledInput:
     def __init__(
@@ -155,4 +156,49 @@ class LabeledSelection(_LabeledInput):
     @items.setter
     def items(self, items: Iterable | None):
         self.input.items = items
+
+
+class FormField(Box):
+    """A modified `toga.Box` that includes children and properties:
+
+    - :label: A `toga.Label` positioned above the input that holds the input title;
+    - :input: The `input_widget` provided, should be a Toga widget that accepts user input;
+    - :description: An extra `toga.Label` positioned below the input with extra information
+      about it, will only be present if `description` is provided.
+    """
+
+    def __new__(
+        self,
+        label: str,
+        input_widget: Type[Widget],
+        description: str | None = None,
+        id: str | None = None,
+        is_required: bool = False,
+    ):
+        label_widget = Label(
+            text=label,
+            id=f"{id}_label" if id else f"{label}_label",
+            style=input_annotation(),
+        )
+        input_widget.style = user_input(type(input_widget))
+
+        self.contents = Box(
+            id=id if id else label,
+            style=Pack(direction="column"),
+            children=[label_widget, input_widget],
+        )
+        if description:
+            description_widget = Label(
+                text=description,
+                id=f"{id}_desc" if id else f"{label}_desc",
+                style=input_annotation("legend"),
+            )
+            self.contents.add(description_widget)
+            self.contents.description = description_widget
+
+        self.contents.label = label_widget
+        self.contents.input = input_widget
+        self.contents.is_required = is_required
+        return self.contents
+
 

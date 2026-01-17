@@ -13,6 +13,7 @@ from .base import BaseSection
 
 from flowat.const import icon, style
 from flowat.form.date import VerticalDateForm
+from flowat.form.elem import FormField
 
 
 class ExpensesSection(BaseSection):
@@ -28,6 +29,11 @@ class ExpensesSection(BaseSection):
         ]
 
         #self.image_expense = ImageView(icon.MONEY_OUT_IMG)
+
+        self.date_input = VerticalDateForm(
+            id="expense_form_duedate",
+            value=date.today()
+        )
         self.first_interaction = Column(children=[
             Button(
                 id="btn_first_expense",
@@ -48,8 +54,12 @@ class ExpensesSection(BaseSection):
                 Selection(id="expense_form_type_selection", items=expense_categories),
             ]),
             Column(children=[
-                VerticalDateForm(id="expense_form_duedate", value=date.today()),
-                TextInput(id="expense_form_value", placeholder="0,00"),
+                self.date_input.widget,
+                FormField(
+                    id="expense_form_value",
+                    input_widget=TextInput,
+                    label="valor",
+                )
             ])
         ])
 

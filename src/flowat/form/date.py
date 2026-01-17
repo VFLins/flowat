@@ -10,7 +10,7 @@ from toga.widgets.base import Widget
 from toga.widgets.numberinput import NumberInput
 from toga.widgets.textinput import TextInput
 from toga.widgets.selection import Selection
-from toga.widgets.box import Box, StyleT
+from toga.widgets.box import Box, Row, Column
 from toga.widgets.label import Label
 
 from flowat.const import style
@@ -101,7 +101,7 @@ class HorizontalDateForm:
 class VerticalDateForm(HorizontalDateForm):
     def __init__(self, value: date, id: str | None = None):
         super().__init__(id=id, value=value)
-        self.widget = Row(
+        self.widget = Column(
             id=id,
             children=[
                 self.day_input.widget,
