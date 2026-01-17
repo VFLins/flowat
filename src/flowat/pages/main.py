@@ -1,14 +1,13 @@
 from toga.widgets.label import Label
 from toga.widgets.button import Button
-from toga.widgets.divider import Divider
 from toga.widgets.box import Box, Column, Row
-from toga.widgets.optioncontainer import OptionContainer
 from toga.style import Pack
 
 from .base import BaseSection
 from .expenses import ExpensesSection
 from .revenues import RevenuesSection
 from flowat.const import style, icon
+
 
 class MainSection(BaseSection):
 
@@ -55,7 +54,8 @@ class MainSection(BaseSection):
                     style=style.BIG_SQUARE_BUTTON,
                     on_press=self.set_context_content,
                 ),
-                Label("Relatórios", style=Pack(text_align="center", width=120)),
+                Label("Relatórios", style=Pack(
+                    text_align="center", width=120)),
             ]
         )
         self.preferences_button = Column(
@@ -67,7 +67,8 @@ class MainSection(BaseSection):
                     style=style.BIG_SQUARE_BUTTON,
                     on_press=self.set_context_content,
                 ),
-                Label("Preferências", style=Pack(text_align="center", width=120)),
+                Label("Preferências", style=Pack(
+                    text_align="center", width=120)),
             ]
         )
 
@@ -75,6 +76,7 @@ class MainSection(BaseSection):
         self.revenue_section = RevenuesSection(app=self._app)
 
         self.buttons_container = Row(
+            style=Pack(margin=30),
             children=[
                 self.add_expense_button,
                 self.add_revenue_button,
@@ -99,8 +101,8 @@ class MainSection(BaseSection):
             self.revenue_section.full_contents,
         ]
         for btn in other_buttons:
-            btn.enabled = True # enable other buttons
-        widget.enabled = False # disable clicked button
+            btn.enabled = True  # enable other buttons
+        widget.enabled = False  # disable clicked button
         # remove previous section content
         self.full_contents.remove(*sections_contents)
         # add current section content

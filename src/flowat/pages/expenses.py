@@ -1,4 +1,4 @@
-from toga.widgets.detailedlist import DetailedList
+from toga.widgets.table import Table
 from toga.widgets.imageview import ImageView
 from toga.widgets.textinput import TextInput
 from toga.widgets.selection import Selection
@@ -12,7 +12,7 @@ from datetime import date
 
 from .base import BaseSection
 
-from flowat.const import icon, style
+from flowat.const import style
 from flowat.form.date import HorizontalDateForm
 from flowat.form.elem import FormField
 
@@ -26,10 +26,15 @@ class ExpensesSection(BaseSection):
             "Folha de pagamento",
             "Tributo",
             "Conta (água, telefone, etc.)",
-            "Fatura do cartão de crédito"
+            "Fatura do cartão de crédito",
+        ]
+        expense_descriptions = [
+            ("Fornecedor Recorrente Flautinha"),
+            ("Conta de água: Filial 1"),
+            ("Funcionários do atendimento"),
         ]
 
-        #self.image_expense = ImageView(icon.MONEY_OUT_IMG)
+        # self.image_expense = ImageView(icon.MONEY_OUT_IMG)
 
         self.date_input = HorizontalDateForm(
             id="expense_form_duedate",
@@ -47,18 +52,43 @@ class ExpensesSection(BaseSection):
                 style=style.BIG_BUTTON
             ),
         ])
-        self.expense_form = Column(style=Pack(width=480), children=[
-            TextInput(id="expense_form_description_search", placeholder="Descrição"),
-            DetailedList(id="expense_form_description_result"),
-            Label("Categoria"),
-            Selection(id="expense_form_type_selection", items=expense_categories),
-            self.date_input.widget,
+        self.expense_form = Column(style=Pack(width=410), children=[
             FormField(
-                id="expense_form_value",
+                id="expense_form_type_selection",
+                input_widget=Selection(items=expense_categories),
+                label="Categoria",
+                unstyled=True,
+            ),
+            FormField(
+                id="expense_form_description_search",
                 input_widget=TextInput(),
-                label="Valor",
-                placeholder="0,00",
-            )
+                label="Descrição",
+                unstyled=True,
+            ),
+            Table(
+                id="expense_form_description_result",
+                data=expense_descriptions,
+                accessors=["name"]
+            ),
+            FormField(
+                id="expense_form_barcode",
+                input_widget=TextInput(),
+                label="Código de barras",
+                unstyled=True,
+            ),
+            self.date_input.widget,
+            Row(style=Pack(align_items="end"), children=[
+                FormField(
+                    id="expense_form_value",
+                    input_widget=TextInput(placeholder="0,00"),
+                    label="Valor",
+                ),
+                FormField(
+                    id="expense_form_insert",
+                    input_widget=Button("Inserir"),
+                    label=""
+                )
+            ])
         ])
 
         self.main_container = Box(
@@ -68,7 +98,7 @@ class ExpensesSection(BaseSection):
         self.full_contents = Box(
             style=Pack(align_items="center", flex=1, direction="row"),
             children=[
-                #self.image_expense,
+                # self.image_expense,
                 self.main_container
             ]
         )
@@ -77,4 +107,3 @@ class ExpensesSection(BaseSection):
         no_expense_data = True
         no_data = True
         container = Box()
-

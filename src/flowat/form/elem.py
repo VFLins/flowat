@@ -15,6 +15,7 @@ from toga.widgets.detailedlist import DetailedList
 
 from flowat.const.style import input_annotation, user_input
 
+
 class _LabeledInput:
     def __init__(
         self,
@@ -40,8 +41,10 @@ class _LabeledInput:
         self.label = Label(
             text=label_text, id=id + "_label" if id else None, style=input_annotation()
         )
-        self._set_input(id=id + "_input" if id else None, style=style, **kwargs)
-        self.widget = Column(id=id, style=style, children=[self.label, self.input])
+        self._set_input(id=id + "_input" if id else None,
+                        style=style, **kwargs)
+        self.widget = Column(id=id, style=style, children=[
+                             self.label, self.input])
 
     def _set_input(self, id, style, **kwargs):
         """Used by `_LabeledInput`'s children to define the input widget.
@@ -174,14 +177,14 @@ class FormField(Box):
         description: str | None = None,
         id: str | None = None,
         is_required: bool = False,
-        **kwargs,
+        unstyled: bool = False,
     ):
         label_widget = Label(
             text=label,
             id=f"{id}_label" if id else f"{label}_label",
             style=input_annotation(),
         )
-        input_widget.style = user_input(type(input_widget))
+        input_widget.style = Pack() if unstyled else user_input(type(input_widget))
 
         self.contents = Box(
             id=id if id else label,
@@ -201,5 +204,3 @@ class FormField(Box):
         self.contents.input = input_widget
         self.contents.is_required = is_required
         return self.contents
-
-
