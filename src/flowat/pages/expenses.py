@@ -13,6 +13,7 @@ from datetime import date
 from .base import BaseSection
 
 from flowat.const import style
+from flowat.plot.bar import simple_columnplot
 from flowat.form.date import HorizontalDateForm
 from flowat.form.elem import FormField, Heading
 
@@ -33,14 +34,18 @@ class ExpensesSection(BaseSection):
             ("Conta de água: Filial 1"),
             ("Funcionários do atendimento"),
         ]
-
-        # self.image_expense = ImageView(icon.MONEY_OUT_IMG)
+        self.image_expense = ImageView(simple_columnplot(
+            x=["Dez. 2025", "Jan. 2026", "Fev. 2026"],
+            y=[24133, 23122, 22011],
+            title="Gastos registrados",
+        ))
 
         self.date_input = HorizontalDateForm(
             id="expense_form_duedate", value=date.today()
         )
         self.first_interaction = Column(
             children=[
+                self.image_expense,
                 Button(
                     id="btn_first_expense",
                     text="Inserir primerio gasto",
@@ -101,12 +106,11 @@ class ExpensesSection(BaseSection):
         )
 
         self.main_container = Box(
-            style=style.CENTERED_MAIN_CONTAINER, children=[self.expense_form]
+            style=style.CENTERED_MAIN_CONTAINER, children=[self.first_interaction]
         )
         self.full_contents = Box(
-            style=Pack(align_items="start", flex=1, direction="column"),
+            style=Pack(align_items="center", flex=1, direction="column"),
             children=[
-                # self.image_expense,
                 self.main_container
             ],
         )
