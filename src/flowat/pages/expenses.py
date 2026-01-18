@@ -56,7 +56,7 @@ class ExpensesSection(BaseSection):
         self.expense_form = Column(
             style=style.MAIN_CONTAINER,
             children=[
-                Heading("Adicionar", level=1),
+                Heading("Informações", level=1),
                 FormField(
                     id="expense_form_type_selection",
                     input_widget=Selection(items=expense_categories),
@@ -74,7 +74,7 @@ class ExpensesSection(BaseSection):
                     data=expense_descriptions,
                     accessors=["name"],
                 ),
-                Divider(style=Pack(margin=(25, 0, 10, 0))),
+                Heading("Valores", level=1),
                 FormField(
                     id="expense_form_barcode",
                     input_widget=TextInput(),
