@@ -15,7 +15,7 @@ class MainSection(BaseSection):
         "expenses_button",
         "revenues_button",
         "reports_button",
-        "preferences_button"
+        "preferences_button",
     ]
 
     def __init__(self, app):
@@ -31,7 +31,7 @@ class MainSection(BaseSection):
                     enabled=False,
                 ),
                 Label("Gastos", style=Pack(text_align="center", width=120)),
-            ]
+            ],
         )
         self.add_revenue_button = Column(
             style=Pack(align_items="center"),
@@ -43,7 +43,7 @@ class MainSection(BaseSection):
                     on_press=self.set_context_content,
                 ),
                 Label("Receitas", style=Pack(text_align="center", width=120)),
-            ]
+            ],
         )
         self.report_button = Column(
             style=Pack(align_items="center"),
@@ -54,9 +54,8 @@ class MainSection(BaseSection):
                     style=style.BIG_SQUARE_BUTTON,
                     on_press=self.set_context_content,
                 ),
-                Label("Relatórios", style=Pack(
-                    text_align="center", width=120)),
-            ]
+                Label("Relatórios", style=Pack(text_align="center", width=120)),
+            ],
         )
         self.preferences_button = Column(
             style=Pack(align_items="center"),
@@ -67,9 +66,8 @@ class MainSection(BaseSection):
                     style=style.BIG_SQUARE_BUTTON,
                     on_press=self.set_context_content,
                 ),
-                Label("Preferências", style=Pack(
-                    text_align="center", width=120)),
-            ]
+                Label("Preferências", style=Pack(text_align="center", width=120)),
+            ],
         )
 
         self.expense_section = ExpensesSection(app=self._app)
@@ -92,9 +90,7 @@ class MainSection(BaseSection):
 
     def set_context_content(self, widget: Button):
         other_buttons = [
-            self._app.widgets[id]
-            for id in self._BUTTON_IDS
-            if id != widget.id
+            self._app.widgets[id] for id in self._BUTTON_IDS if id != widget.id
         ]
         sections_contents = [
             self.expense_section.full_contents,

@@ -3,19 +3,23 @@ from sys import platform
 
 from toga.style import Pack
 from toga.widgets.base import Widget
-from toga.widgets.textinput import TextInput
 from toga.widgets.button import Button
-from toga.widgets.numberinput import NumberInput
+from toga.widgets.textinput import TextInput
 from toga.widgets.selection import Selection
+from toga.widgets.numberinput import NumberInput
 
 
+# containers
 CENTERED_MAIN_CONTAINER = Pack(
-    align_items="center",
-    flex=1,
-    direction="column",
-    margin=(0, 0, 50, 0)
+    align_items="center", flex=1, direction="column", margin=(0, 0, 50, 0)
 )
+MAIN_CONTAINER = Pack(align_items="center", direction="column", width=395)
 
+# labels
+HEADING1 = Pack(font_size=14, font_weight="bold")
+HEADING2 = Pack(font_size=11, font_weight="bold", font_style="italic")
+
+# buttons
 BIG_BUTTON = Pack(width=220, margin=5)
 BIG_SQUARE_BUTTON = Pack(width=52, height=52, margin=5)
 
@@ -32,17 +36,14 @@ def user_input(widget_type: Type[Widget]) -> Pack:
         return Pack()
 
 
-def input_annotation(
-    annotation_type: Literal["label", "legend"] = "label"
-) -> Pack:
+def input_annotation(annotation_type: Literal["label", "legend"] = "label") -> Pack:
     """Returns the default style for the user input's annotation element."""
     if annotation_type == "label":
         return _system_based_input_label_style()
     elif annotation_type == "legend":
         return Pack(font_size=10, margin=(0, 0, 10, 5))
     else:
-        raise ValueError(
-            f"{annotation_type=}, expected one of 'label', 'legend'.")
+        raise ValueError(f"{annotation_type=}, expected one of 'label', 'legend'.")
 
 
 def number_input_width():
@@ -60,9 +61,9 @@ def selection_width():
 def _system_based_input_label_style() -> Pack:
     """OS based style for a `toga.Label` element used as label to an input field."""
     if platform == "linux":
-        return Pack(margin=(15, 5, 2, 8), width=190)
+        return Pack(margin=(15, 5, 2, 8))
     else:
-        return Pack(margin=(25, 5, 2, 2), width=190)
+        return Pack(margin=(25, 5, 2, 2))
 
 
 def _system_based_selection_style() -> Pack:
