@@ -1,9 +1,10 @@
-from toga.widgets.table import Table
 from toga.widgets.imageview import ImageView
 from toga.widgets.textinput import TextInput
 from toga.widgets.selection import Selection
+from toga.widgets.webview import WebView
 from toga.widgets.divider import Divider
 from toga.widgets.button import Button
+from toga.widgets.table import Table
 from toga.widgets.label import Label
 from toga.widgets.box import Box, Row, Column
 from toga.style import Pack
@@ -13,7 +14,7 @@ from datetime import date
 from .base import BaseSection
 
 from flowat.const import style
-from flowat.plot.bar import simple_columnplot
+from flowat.plot.bar import simple_columnplot, interactive_columnplot
 from flowat.form.date import HorizontalDateForm
 from flowat.form.elem import FormField, Heading
 
@@ -39,13 +40,18 @@ class ExpensesSection(BaseSection):
             y=[24133, 23122, 22011],
             title="Gastos registrados",
         ))
+        self.plot_expense = WebView()
+        self.plot_expense.set_content = interactive_columnplot(
+            x=["Dez. 2025", "Jan. 2026", "Fev. 2026"],
+            y=[24133, 23122, 22011],
+        )
 
         self.date_input = HorizontalDateForm(
             id="expense_form_duedate", value=date.today()
         )
         self.first_interaction = Column(
             children=[
-                self.image_expense,
+                self.plot_expense,
                 Button(
                     id="btn_first_expense",
                     text="Inserir primerio gasto",

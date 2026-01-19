@@ -3,8 +3,12 @@ import matplotlib.transforms as mtransforms
 from matplotlib.patches import FancyBboxPatch
 from matplotlib.path import Path
 import matplotlib.patches as patches
+import plotly.express as px
 from PIL import Image
 import io
+
+from flowat.plot.base import PLOTLYJS_PATH
+
 
 def get_rounded_bar(x, y, width, radius):
     """Cria um caminho (Path) para uma barra com topo arredondado."""
@@ -62,3 +66,8 @@ def simple_columnplot(x: list[str], y: list[float], title: str | None = None) ->
     plt.close()  # Close the figure to free memory
     buf.seek(0)  # Rewind the buffer to the beginning
     return Image.open(buf)
+
+
+def interactive_columnplot(x: list[str], y: list[float]) -> str:
+    fig = px.bar(x=x, y=y)
+    return fig.to_html(include_plotlyjs=PLOTLYJS_PATH)

@@ -1,1 +1,1 @@
-from . import bar
+from . import bar, base

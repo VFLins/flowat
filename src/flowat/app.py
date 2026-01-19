@@ -1,6 +1,6 @@
 import toga
 
-from flowat import pages
+from flowat import pages, plot
 
 
 class Flowat(toga.App):
@@ -13,6 +13,7 @@ class Flowat(toga.App):
         """
         self.main_page = pages.main.MainSection(app=self)
         main_box = self.main_page.full_contents
+        plot.base.ensure_plotlyjs()
 
         self.main_window = toga.Window(title=self.formal_name)
         self.main_window.content = main_box
