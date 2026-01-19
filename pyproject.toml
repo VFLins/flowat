@@ -26,6 +26,8 @@ test_sources = [
 
 requires = [
     "matplotlib",
+    "plotly",
+    "pandas"
 ]
 test_requires = [
     "pytest",
