@@ -8,6 +8,7 @@ from PIL import Image
 import io
 
 from flowat.plot.base import PLOTLYJS_PATH
+from flowat.const.sys import BG_COLOR, FG_COLOR
 
 
 def get_rounded_bar(x, y, width, radius):
@@ -70,4 +71,11 @@ def simple_columnplot(x: list[str], y: list[float], title: str | None = None) ->
 
 def interactive_columnplot(x: list[str], y: list[float]) -> str:
     fig = px.bar(x=x, y=y)
-    return fig.to_html(include_plotlyjs=PLOTLYJS_PATH)
+    fig.update_layout(
+        plot_bgcolor='rgba(0, 0, 0, 0)',
+        paper_bgcolor='rgba(0, 0, 0, 0)',
+        font={"color": FG_COLOR},
+    )
+    transparent_bg = f"document.body.style.backgroundColor = '{BG_COLOR}';"
+    html = fig.to_html(include_plotlyjs=PLOTLYJS_PATH, post_script=[transparent_bg])
+    return html

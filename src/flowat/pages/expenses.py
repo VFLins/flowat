@@ -40,18 +40,20 @@ class ExpensesSection(BaseSection):
             y=[24133, 23122, 22011],
             title="Gastos registrados",
         ))
-        self.plot_expense = WebView()
-        self.plot_expense.set_content = interactive_columnplot(
-            x=["Dez. 2025", "Jan. 2026", "Fev. 2026"],
-            y=[24133, 23122, 22011],
+        self.plot_expense = WebView(
+            style=Pack(flex=1, height=220, background_color="transparent"),
+            content = interactive_columnplot(
+                x=["Dez. 2025", "Jan. 2026", "Fev. 2026"],
+                y=[24133, 23122, 22011],
+            )
         )
 
         self.date_input = HorizontalDateForm(
             id="expense_form_duedate", value=date.today()
         )
         self.first_interaction = Column(
+            style=style.CENTERED_MAIN_CONTAINER,
             children=[
-                self.plot_expense,
                 Button(
                     id="btn_first_expense",
                     text="Inserir primerio gasto",
@@ -112,7 +114,7 @@ class ExpensesSection(BaseSection):
         )
 
         self.main_container = Box(
-            style=style.CENTERED_MAIN_CONTAINER, children=[self.first_interaction]
+            style=style.CENTERED_MAIN_CONTAINER, children=[self.plot_expense, self.first_interaction]
         )
         self.full_contents = Box(
             style=Pack(align_items="center", flex=1, direction="column"),
