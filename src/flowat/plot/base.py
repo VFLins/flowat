@@ -10,5 +10,5 @@ def ensure_plotlyjs():
     if not PLOTLYJS_PATH.is_file():
         js_content = get_plotlyjs()
         print("Writing plotly.min.js file...")
-        with open("plotly.min.js", "w", encoding="utf-8") as f:
+        with open(PLOTLYJS_PATH, "w", encoding="utf-8") as f:
             f.write(js_content)

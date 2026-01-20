@@ -6,8 +6,8 @@ import subprocess
 
 if platform == "win32":
     FLOWAT_FILES_PATH = Path.home().joinpath("AppData", "Local", "Flowat")
-    CONFIG_PATH = Path(CASHD_FILES_PATH, "configs")
-    LOG_PATH = Path(CASHD_FILES_PATH, "logs")
+    CONFIG_PATH = Path(FLOWAT_FILES_PATH, "configs")
+    LOG_PATH = Path(FLOWAT_FILES_PATH, "logs")
 else:
     FLOWAT_FILES_PATH = Path.home().joinpath(".local", "share", "Flowat")
     CONFIG_PATH = Path.home().joinpath(".config", "Flowat")
