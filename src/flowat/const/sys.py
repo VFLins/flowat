@@ -66,10 +66,12 @@ def _linux_dark_mode() -> bool:
     return "dark" in result.stdout.lower()
 
 
-if not sys_dark_mode():
-    BG_COLOR = "#fff"
-    FG_COLOR = "#1e1e1e"
-else:
+if sys_dark_mode():
     BG_COLOR = "#000"
     FG_COLOR = "#e1e1e1"
-
+else:
+    if platform == "win32":
+        BG_COLOR = "#f0f0f0"
+    else:
+        BG_COLOR = "#fff"
+    FG_COLOR = "#1e1e1e"

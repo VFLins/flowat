@@ -2,9 +2,11 @@ import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
 from matplotlib.patches import FancyBboxPatch
 from matplotlib.path import Path
+from sys import platform
 import matplotlib.patches as patches
 import plotly.express as px
 from PIL import Image
+import urllib
 import io
 
 from flowat.plot.base import PLOTLYJS_PATH
@@ -77,5 +79,8 @@ def interactive_columnplot(x: list[str], y: list[float]) -> str:
         font={"color": FG_COLOR},
     )
     transparent_bg = f"document.body.style.backgroundColor = '{BG_COLOR}';"
-    html = fig.to_html(include_plotlyjs=PLOTLYJS_PATH, post_script=[transparent_bg])
+    if platform in ["win32", "android"]:
+        html = fig.to_html(include_plotlyjs="cdn", post_script=[transparent_bg]) 
+    else:
+        html = fig.to_html(include_plotlyjs=PLOTLYJS_PATH, post_script=[transparent_bg])
     return html
