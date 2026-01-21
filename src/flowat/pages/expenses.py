@@ -45,7 +45,8 @@ class ExpensesSection(BaseSection):
             content = interactive_columnplot(
                 x=["Dez. 2025", "Jan. 2026", "Fev. 2026", "Mar. 2026", "Abr. 2026"],
                 y=[24133, 23122, 12011, 954, 97],
-            )
+            ),
+            on_webview_load=self.reload_plot,
         )
 
         self.date_input = HorizontalDateForm(
@@ -121,6 +122,16 @@ class ExpensesSection(BaseSection):
             children=[
                 self.main_container
             ],
+        )
+
+    def reload_plot(self, widget: WebView):
+        n_loads = getattr(widget, "_n_loads", 0)
+        widget._n_loads = n_loads + 1
+        if widget._n_loads % 2 == 1:
+            return
+        widget.content = interactive_columnplot(
+            x=["Dez. 2025", "Jan. 2026", "Fev. 2026", "Mar. 2026", "Abr. 2026"],
+            y=[24133, 23122, 12011, 954, 297],
         )
 
     def _refresh_layout(self) -> Box:
