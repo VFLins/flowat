@@ -14,17 +14,21 @@ class RevenuesSection(BaseSection):
         super().__init__(app=app)
 
         # self.image_revenue = ImageView(icon.MONEY_OUT_IMG)
-        self.add_first_revenue = Button(
+        self.add_first_revenue_button = Button(
             "Inserir primeira receita", style=style.BIG_BUTTON
         )
-        self.restore_data = Button("Restaurar dados", style=style.BIG_BUTTON)
+        self.restore_data_button = Button("Restaurar dados", style=style.BIG_BUTTON)
 
         self.main_container = Box(
             style=style.CENTERED_MAIN_CONTAINER,
             children=[
-                self.add_first_revenue,
+                ImageView(image=icon.MISSING_ITEM_IMG, style=Pack(margin=30)),
+                Label("Nenhum registro encontrado, você pode:", style=Pack(font_size=16, text_align="center", margin=(0, 0, 60, 0))),
+                self.add_first_revenue_button,
                 Label("ou", style=Pack(text_align="center")),
-                self.restore_data,
+                self.restore_data_button,
+                Label("ou", style=Pack(text_align="center")),
+                Button("Ler vendas do PDV", style=style.BIG_BUTTON),
             ],
         )
         self.full_contents = Box(

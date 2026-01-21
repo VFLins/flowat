@@ -13,7 +13,7 @@ from datetime import date
 
 from .base import BaseSection
 
-from flowat.const import style
+from flowat.const import style, icon
 from flowat.plot.bar import simple_columnplot, interactive_columnplot
 from flowat.form.date import HorizontalDateForm
 from flowat.form.elem import FormField, Heading
@@ -55,11 +55,14 @@ class ExpensesSection(BaseSection):
         self.first_interaction = Column(
             style=style.CENTERED_MAIN_CONTAINER,
             children=[
+                ImageView(image=icon.MISSING_ITEM_IMG, style=Pack(margin=30)),
+                Label("Nenhum registro encontrado, você pode:", style=Pack(font_size=16, text_align="center", margin=(0, 0, 60, 0))),
                 Button(
                     id="btn_first_expense",
                     text="Inserir primerio gasto",
                     style=style.BIG_BUTTON,
                 ),
+                Label("ou", style=Pack(text_align="center")),
                 Button(
                     id="btn_first_restore_backup",
                     text="Restaurar dados",
@@ -115,7 +118,7 @@ class ExpensesSection(BaseSection):
         )
 
         self.main_container = Box(
-            style=style.CENTERED_MAIN_CONTAINER, children=[self.plot_expense, self.first_interaction]
+            style=style.CENTERED_MAIN_CONTAINER, children=[self.first_interaction]
         )
         self.full_contents = Box(
             style=Pack(align_items="center", flex=1, direction="column"),
