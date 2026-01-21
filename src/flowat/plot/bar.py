@@ -72,15 +72,24 @@ def simple_columnplot(x: list[str], y: list[float], title: str | None = None) ->
 
 
 def interactive_columnplot(x: list[str], y: list[float]) -> str:
+    ticktext = [f"R$ {v/1000:.1f} mil" if v > 100 else f"R$ {v:.2f}" for v in y]
     fig = px.bar(x=x, y=y)
     fig.update_layout(
         plot_bgcolor='rgba(0, 0, 0, 0)',
         paper_bgcolor='rgba(0, 0, 0, 0)',
         font={"color": FG_COLOR},
+        xaxis_title=None,
+        xaxis={"fixedrange": True},
+        yaxis_title=None,
+        yaxis={"tickmode": "array", "tickvals": y, "ticktext": ticktext, "fixedrange": True},
+        margin={"l": 0, "r": 0, "t": 0, "b": 0},
+        hovermode="closest",
     )
+    fig.update_traces(hovertemplate=None, marker_color="#8d81ea")
+    fig.update_yaxes(showticklabels=False, showgrid=False)
     transparent_bg = f"document.body.style.backgroundColor = '{BG_COLOR}';"
     if platform in ["win32", "android"]:
-        html = fig.to_html(include_plotlyjs="cdn", post_script=[transparent_bg]) 
+        html = fig.to_html(include_plotlyjs="cdn", post_script=[transparent_bg], config={'displayModeBar': False}) 
     else:
-        html = fig.to_html(include_plotlyjs=PLOTLYJS_PATH, post_script=[transparent_bg])
+        html = fig.to_html(include_plotlyjs=PLOTLYJS_PATH, post_script=[transparent_bg], config={'displayModeBar': False})
     return html

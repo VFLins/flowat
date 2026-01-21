@@ -9,11 +9,13 @@ from toga.widgets.selection import Selection
 from toga.widgets.numberinput import NumberInput
 
 
+CONTENT_WIDTH = 440
+
 # containers
 CENTERED_MAIN_CONTAINER = Pack(
     align_items="center", flex=1, direction="column", margin=(0, 0, 50, 0)
 )
-MAIN_CONTAINER = Pack(align_items="center", direction="column", width=395)
+MAIN_CONTAINER = Pack(align_items="center", direction="column", width=440)
 
 # labels
 HEADING1 = Pack(font_size=14, font_weight="bold")
@@ -22,7 +24,6 @@ HEADING2 = Pack(font_size=11, font_weight="bold", font_style="italic")
 # buttons
 BIG_BUTTON = Pack(width=220, margin=5)
 BIG_SQUARE_BUTTON = Pack(width=52, height=52, margin=5)
-
 
 def user_input(widget_type: Type[Widget]) -> Pack:
     """Returns the default style for the user input's form element."""

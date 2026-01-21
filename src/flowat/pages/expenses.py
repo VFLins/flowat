@@ -41,10 +41,10 @@ class ExpensesSection(BaseSection):
             title="Gastos registrados",
         ))
         self.plot_expense = WebView(
-            style=Pack(flex=1, height=220, background_color="transparent"),
+            style=Pack(width=style.CONTENT_WIDTH, height=220, background_color="transparent"),
             content = interactive_columnplot(
-                x=["Dez. 2025", "Jan. 2026", "Fev. 2026"],
-                y=[24133, 23122, 22011],
+                x=["Dez. 2025", "Jan. 2026", "Fev. 2026", "Mar. 2026", "Abr. 2026"],
+                y=[24133, 23122, 12011, 954, 97],
             )
         )
 

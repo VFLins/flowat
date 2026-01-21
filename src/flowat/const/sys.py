@@ -67,7 +67,7 @@ def _linux_dark_mode() -> bool:
 
 
 if sys_dark_mode():
-    BG_COLOR = "#000"
+    BG_COLOR = "#1e1e1e"
     FG_COLOR = "#e1e1e1"
 else:
     if platform == "win32":
