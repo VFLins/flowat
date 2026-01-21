@@ -55,17 +55,17 @@ class ExpensesSection(BaseSection):
         self.first_interaction = Column(
             style=style.CENTERED_MAIN_CONTAINER,
             children=[
-                ImageView(image=icon.MISSING_ITEM_IMG, style=Pack(margin=30)),
-                Label("Nenhum registro encontrado, você pode:", style=Pack(font_size=16, text_align="center", margin=(0, 0, 60, 0))),
+                ImageView(image=icon.MISSING_ITEM_IMG, style=Pack(margin=20, width=96, height=96)),
+                Label("Nenhum registro encontrado, você pode:", style=Pack(font_size=13, text_align="center", margin=(0, 0, 30, 0))),
                 Button(
                     id="btn_first_expense",
                     text="Inserir primerio gasto",
                     style=style.BIG_BUTTON,
+                    on_press=self.show_form,
                 ),
-                Label("ou", style=Pack(text_align="center")),
                 Button(
                     id="btn_first_restore_backup",
-                    text="Restaurar dados",
+                    text="Restaurar um backup",
                     style=style.BIG_BUTTON,
                 ),
             ]
@@ -109,7 +109,7 @@ class ExpensesSection(BaseSection):
                         ),
                         FormField(
                             id="expense_form_insert",
-                            input_widget=Button("Inserir"),
+                            input_widget=Button("Inserir", on_press=self.add_expense),
                             label="",
                         ),
                     ],
@@ -136,6 +136,36 @@ class ExpensesSection(BaseSection):
             x=["Dez. 2025", "Jan. 2026", "Fev. 2026", "Mar. 2026", "Abr. 2026"],
             y=[24133, 23122, 12011, 954, 297],
         )
+
+    def add_expense(self, widget: Button):
+        """Prompts to user to confirm the inserted data, in the positive case, writes
+        to the database. Does nothing otherwise.
+        """
+        self.show_main_content(widget=widget)
+
+    def show_form(self, widget: Button):
+        """Removes currently displayed elments and show a form where the user can
+        add a new expense.
+        """
+        self.main_container.clear()
+        self.main_container.style = style.MAIN_CONTAINER
+        self.main_container.add(self.expense_form)
+
+    def show_main_content(self, widget: Button):
+        """Removes currently displayed elments and show a form where the user can
+        add a new expense.
+        """
+        self.main_container.clear()
+        self.main_container.style = style.CENTERED_MAIN_CONTAINER
+        new_container = self._get_main_container()
+        self.main_container.add(new_container)
+
+    def _get_main_container(self):
+        """Returns the 'common interaction' container, or 'first interaction' when
+        there is no expense data in the database. The 'first interaction' container
+        may include a 'restore backup' button if there's also no revenue data.
+        """
+        return self.first_interaction
 
     def _refresh_layout(self) -> Box:
         no_expense_data = True

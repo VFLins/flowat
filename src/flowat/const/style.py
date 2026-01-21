@@ -13,13 +13,13 @@ CONTENT_WIDTH = 440
 
 # containers
 CENTERED_MAIN_CONTAINER = Pack(
-    align_items="center", flex=1, direction="column", margin=(0, 0, 50, 0)
+    align_items="center", flex=1, direction="row", margin=(0, 0, 20, 0)
 )
-MAIN_CONTAINER = Pack(align_items="center", direction="column", width=440)
+MAIN_CONTAINER = Pack(align_items="center", direction="column", width=440, margin=(0, 0, 20, 0))
 
 # labels
-HEADING1 = Pack(font_size=14, font_weight="bold")
-HEADING2 = Pack(font_size=11, font_weight="bold", font_style="italic")
+HEADING1 = Pack(font_size=14, font_weight="bold", margin=(15, 0, 0, 0))
+HEADING2 = Pack(font_size=11, font_weight="bold", font_style="italic", margin=(10, 0, 0 ,0))
 
 # buttons
 BIG_BUTTON = Pack(width=220, margin=5)

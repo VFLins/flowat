@@ -1,7 +1,7 @@
 from toga.widgets.imageview import ImageView
 from toga.widgets.button import Button
 from toga.widgets.label import Label
-from toga.widgets.box import Box
+from toga.widgets.box import Box, Column
 from toga.style import Pack
 
 from .base import BaseSection
@@ -17,19 +17,21 @@ class RevenuesSection(BaseSection):
         self.add_first_revenue_button = Button(
             "Inserir primeira receita", style=style.BIG_BUTTON
         )
-        self.restore_data_button = Button("Restaurar dados", style=style.BIG_BUTTON)
+        self.restore_data_button = Button("Restaurar um backup", style=style.BIG_BUTTON)
 
-        self.main_container = Box(
+        self.first_interaction = Column(
             style=style.CENTERED_MAIN_CONTAINER,
             children=[
-                ImageView(image=icon.MISSING_ITEM_IMG, style=Pack(margin=30)),
-                Label("Nenhum registro encontrado, você pode:", style=Pack(font_size=16, text_align="center", margin=(0, 0, 60, 0))),
+                ImageView(image=icon.MISSING_ITEM_IMG, style=Pack(margin=20, width=96, height=96)),
+                Label("Nenhum registro encontrado, você pode:", style=Pack(font_size=13, text_align="center", margin=(0, 0, 30, 0))),
                 self.add_first_revenue_button,
-                Label("ou", style=Pack(text_align="center")),
                 self.restore_data_button,
-                Label("ou", style=Pack(text_align="center")),
                 Button("Ler vendas do PDV", style=style.BIG_BUTTON),
             ],
+        )
+        self.main_container = Box(
+            style=style.CENTERED_MAIN_CONTAINER,
+            children=[self.first_interaction],
         )
         self.full_contents = Box(
             style=Pack(align_items="center", flex=1, direction="row"),
