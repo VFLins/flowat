@@ -84,6 +84,7 @@ def interactive_columnplot(x: list[str], y: list[float]) -> str:
         yaxis={"tickmode": "array", "tickvals": y, "ticktext": ticktext, "fixedrange": True},
         margin={"l": 0, "r": 0, "t": 0, "b": 0},
         hovermode="closest",
+        barcornerradius=6,
     )
     fig.update_traces(hovertemplate=None, marker_color="#8d81ea")
     fig.update_yaxes(showticklabels=False, showgrid=False)
