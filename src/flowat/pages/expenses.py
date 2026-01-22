@@ -30,11 +30,6 @@ class ExpensesSection(BaseSection):
             "Conta (água, telefone, etc.)",
             "Fatura do cartão de crédito",
         ]
-        expense_descriptions = [
-            ("Fornecedor Recorrente Flautinha"),
-            ("Conta de água: Filial 1"),
-            ("Funcionários do atendimento"),
-        ]
         self.image_expense = ImageView(simple_columnplot(
             x=["Dez. 2025", "Jan. 2026", "Fev. 2026"],
             y=[24133, 23122, 22011],
@@ -73,7 +68,6 @@ class ExpensesSection(BaseSection):
         self.expense_form = Column(
             style=style.MAIN_CONTAINER,
             children=[
-                Heading("Informações", level=1),
                 FormField(
                     id="expense_form_type_selection",
                     input_widget=Selection(items=expense_categories),
@@ -86,12 +80,6 @@ class ExpensesSection(BaseSection):
                     label="Descrição",
                     unstyled=True,
                 ),
-                Table(
-                    id="expense_form_description_result",
-                    data=expense_descriptions,
-                    accessors=["name"],
-                ),
-                Heading("Valores", level=1),
                 FormField(
                     id="expense_form_barcode",
                     input_widget=TextInput(),
@@ -107,11 +95,8 @@ class ExpensesSection(BaseSection):
                             input_widget=TextInput(placeholder="0,00"),
                             label="Valor",
                         ),
-                        FormField(
-                            id="expense_form_insert",
-                            input_widget=Button("Inserir", on_press=self.add_expense),
-                            label="",
-                        ),
+                        Button("Cancelar", style=style.SIMPLE_BUTTON),
+                        Button("Inserir", style=style.SIMPLE_BUTTON, on_press=self.add_expense),
                     ],
                 ),
             ],
