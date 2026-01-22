@@ -3,8 +3,8 @@ from pathlib import Path
 
 from flowat.const.sys import FLOWAT_FILES_PATH
 
-
 PLOTLYJS_PATH = Path(FLOWAT_FILES_PATH, "plotly.min.js")
+
 
 def ensure_plotlyjs():
     if not PLOTLYJS_PATH.is_file():

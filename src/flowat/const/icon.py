@@ -3,7 +3,6 @@ from toga.images import Image
 from pathlib import Path
 from PIL import Image as IMG
 
-
 _RESOURCES_DIR = Path(Path(__file__).resolve().parent.parent, "resources")
 
 CIRCLE_MINUS = Icon(path=Path(_RESOURCES_DIR, "circle-minus"), system=True)

@@ -30,14 +30,18 @@ class ExpensesSection(BaseSection):
             "Conta (água, telefone, etc.)",
             "Fatura do cartão de crédito",
         ]
-        self.image_expense = ImageView(simple_columnplot(
-            x=["Dez. 2025", "Jan. 2026", "Fev. 2026"],
-            y=[24133, 23122, 22011],
-            title="Gastos registrados",
-        ))
+        self.image_expense = ImageView(
+            simple_columnplot(
+                x=["Dez. 2025", "Jan. 2026", "Fev. 2026"],
+                y=[24133, 23122, 22011],
+                title="Gastos registrados",
+            )
+        )
         self.plot_expense = WebView(
-            style=Pack(width=style.CONTENT_WIDTH, height=220, background_color="transparent"),
-            content = interactive_columnplot(
+            style=Pack(
+                width=style.CONTENT_WIDTH, height=220, background_color="transparent"
+            ),
+            content=interactive_columnplot(
                 x=["Dez. 2025", "Jan. 2026", "Fev. 2026", "Mar. 2026", "Abr. 2026"],
                 y=[24133, 23122, 12011, 954, 97],
             ),
@@ -50,8 +54,14 @@ class ExpensesSection(BaseSection):
         self.first_interaction = Column(
             style=style.CENTERED_MAIN_CONTAINER,
             children=[
-                ImageView(image=icon.MISSING_ITEM_IMG, style=Pack(margin=20, width=96, height=96)),
-                Label("Nenhum registro encontrado, você pode:", style=Pack(font_size=13, text_align="center", margin=(0, 0, 30, 0))),
+                ImageView(
+                    image=icon.MISSING_ITEM_IMG,
+                    style=Pack(margin=20, width=96, height=96),
+                ),
+                Label(
+                    "Nenhum registro encontrado, você pode:",
+                    style=Pack(font_size=13, text_align="center", margin=(0, 0, 30, 0)),
+                ),
                 Button(
                     id="btn_first_expense",
                     text="Inserir primerio gasto",
@@ -63,7 +73,7 @@ class ExpensesSection(BaseSection):
                     text="Restaurar um backup",
                     style=style.BIG_BUTTON,
                 ),
-            ]
+            ],
         )
         self.expense_form = Column(
             style=style.MAIN_CONTAINER,
@@ -95,8 +105,16 @@ class ExpensesSection(BaseSection):
                             input_widget=TextInput(placeholder="0,00"),
                             label="Valor",
                         ),
-                        Button("Cancelar", style=style.SIMPLE_BUTTON),
-                        Button("Inserir", style=style.SIMPLE_BUTTON, on_press=self.add_expense),
+                        Button(
+                            "Voltar",
+                            style=style.SIMPLE_BUTTON,
+                            on_press=self.show_main_content,
+                        ),
+                        Button(
+                            "Inserir",
+                            style=style.SIMPLE_BUTTON,
+                            on_press=self.add_expense,
+                        ),
                     ],
                 ),
             ],
@@ -107,9 +125,7 @@ class ExpensesSection(BaseSection):
         )
         self.full_contents = Box(
             style=Pack(align_items="center", flex=1, direction="column"),
-            children=[
-                self.main_container
-            ],
+            children=[self.main_container],
         )
 
     def reload_plot(self, widget: WebView):
