@@ -4,9 +4,9 @@ from configparser import (
     NoSectionError,
     DuplicateSectionError
 )
+from typing import Any
 from pathlib import Path
 from sys import platform
-from os import makedirs
 
 
 if platform == "win32":
@@ -19,13 +19,39 @@ else:
     LOG_PATH = Path.home().joinpath(".local", "state", "Flowat", "log")
 
 for dir in [FLOWAT_FILES_PATH, CONFIG_PATH, LOG_PATH]:
-    makedirs(dir, exist_ok=True)
+    dir.mkdir(parents=True, exist_ok=True)
 
 
-class ConfigInterface:
-    # https://stackoverflow.com/a/31909086
-    def get_parser(self, filename: str) -> ConfigParser:
-        parser = ConfigParser()
-        parser.read(Path(CONFIG_PATH, f"{filename}.ini"))
-        return parser
+# https://stackoverflow.com/a/31909086
+def get_parser(filename: str) -> ConfigParser:
+    parser = ConfigParser()
+    config_file = Path(CONFIG_PATH, f"{filename}.ini")
+    config_file.touch(exist_ok=True)
+    parser.read(config_file)
+    parser._config_file = config_file
+    return parser
 
+
+def get_default_parser() -> ConfigParser:
+    return get_parser(filename="flowat")
+
+
+class _ConfigHandler:
+    def __init__(self, parser: ConfigParser, section: str, key: str, default: Any):
+        """Parent class that sets logic for interacting with a single key on a specific
+        configuration file.
+        """
+        self._parser, self._section, self._key, self._default = (
+            parser, section, key, default
+        )
+        if not parser.has_section(section):
+            parser.add_section(section=section)
+
+def get(interactor: _ConfigHandler) -> Any:
+    """Refresh the parser with the current data and return the expected value."""
+    self._parser.read(self._parser._config_file)
+    return self._parser.get(self._section, self._key, fallback=self._default)
+
+def set(interactor: _ConfigHandler, value: Any):
+    """Write `value` to the configuration file."""
+    self._parser.set(self._section, self._key, str(value))
