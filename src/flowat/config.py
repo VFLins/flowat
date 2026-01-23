@@ -33,13 +33,13 @@ def get_parser(filename: str) -> ConfigParser:
 
 
 def get_default_parser() -> ConfigParser:
-    return get_parser(filename="flowat")
+    return get_parser(filename="prefs")
 
 
-class _ConfigHandler:
-    def __init__(self, parser: ConfigParser, section: str, key: str, default: Any):
-        """Parent class that sets logic for interacting with a single key on a specific
-        configuration file.
+class _Config:
+    def __init__(self, parser: ConfigParser, section: str, key: str, default: Any | None):
+        """Parent metaclass that sets logic for interacting with a single key on a
+        specific configuration file.
         """
         self._parser, self._section, self._key, self._default = (
             parser, section, key, default
@@ -47,11 +47,34 @@ class _ConfigHandler:
         if not parser.has_section(section):
             parser.add_section(section=section)
 
-def get(interactor: _ConfigHandler) -> Any:
-    """Refresh the parser with the current data and return the expected value."""
-    self._parser.read(self._parser._config_file)
-    return self._parser.get(self._section, self._key, fallback=self._default)
+    def _refresh(self):
+        self._parser.read(self._parser._config_file)
 
-def set(interactor: _ConfigHandler, value: Any):
+    def set(self, value: Any):
+        self._parser.set(self._section, self._key, str(value))
+
+    def get() -> Any:
+        self._refresh()
+        return self._parser.get(self._section, self._key, fallback=self._default)
+
+
+class BackupPlaces(_Config):
+    def __init__(self):
+        super().__init__(
+            parser=get_default_parser(),
+            section="backup",
+            key="backup_places",
+            default=None,
+        )
+
+
+def get(interactor: _Config) -> Any:
+    """Refresh the parser with the current data and return the expected value."""
+    config_obj = interactor()
+    return interactor.get()
+
+
+def set(interactor: _Config, value: Any):
     """Write `value` to the configuration file."""
-    self._parser.set(self._section, self._key, str(value))
+    config_obj = interactor()
+    config_obj.set(value)
