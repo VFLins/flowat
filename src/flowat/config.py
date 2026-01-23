@@ -37,12 +37,12 @@ def get_default_parser() -> ConfigParser:
 
 
 class _Config:
-    def __init__(self, parser: ConfigParser, section: str, key: str, default: Any | None):
-        """Parent metaclass that sets logic for interacting with a single key on a
-        specific configuration file.
+    def __init__(self, parser_factory, section: str, key: str, default: Any | None):
+        """Parent that sets logic for interacting with a key that returns a
+        single value on a specific configuration file.
         """
         self._parser, self._section, self._key, self._default = (
-            parser, section, key, default
+            parser_factory(), section, key, default
         )
         if not parser.has_section(section):
             parser.add_section(section=section)
@@ -50,31 +50,67 @@ class _Config:
     def _refresh(self):
         self._parser.read(self._parser._config_file)
 
-    def set(self, value: Any):
+    @classmethod
+    def get(cls):
+        """Refresh the parser with the current data and return the expected value."""
+        config_obj = cls()
+        return cls.__get()
+
+    @classmethod
+    def set(cls):
+        """Write `value` to the configuration file."""
+        config_obj = cls()
+        config_obj.__set(value)
+
+    def __set(self, value: Any):
         self._parser.set(self._section, self._key, str(value))
 
-    def get() -> Any:
+    def __get() -> Any:
         self._refresh()
         return self._parser.get(self._section, self._key, fallback=self._default)
 
 
-class BackupPlaces(_Config):
+class _ConfigList:
+    def __init__(self, parser_factory, section: str, key: str, default: Any | None):
+        """Parent that sets logic for interacting with a key that returns a
+        list of values on a specific configuration file.
+        """
+        self._parser, self._section, self._key, self._default = (
+            parser_factory(), section, key, default
+        )
+        if not parser.has_section(section):
+            parser.add_section(section=section)
+
+    def _refresh(self):
+        self._parser.read(self._parser._config_file)
+
+    def __get(self) -> list[str]:
+        """Get list from config file as a python list of strings."""
+        string = string.replace("[", "").replace("]", "")
+        list_of_items = string.split(",")
+        return [i.strip() for i in list_of_items if i.strip() != ""]
+
+    def __set(self, value: list[str]) -> str:
+        """Writes a a python list to the config file, replacing the existing one."""
+        string_list = (
+            str(list_).replace("[", "[\n\t").replace(
+                ", ", ",\n\t").replace("'", "")
+        )
+        return string_list.replace("\\\\", "\\")
+
+    def __add(self, value: Any):
+        """Adds a `value` to the config list."""
+
+    def __rm(self, value: Any):
+        """Removes `value` from config list if it is present."""
+
+
+
+class BackupPlaces(_ConfigList):
     def __init__(self):
         super().__init__(
-            parser=get_default_parser(),
+            parser_factory=get_default_parser,
             section="backup",
             key="backup_places",
             default=None,
         )
-
-
-def get(interactor: _Config) -> Any:
-    """Refresh the parser with the current data and return the expected value."""
-    config_obj = interactor()
-    return interactor.get()
-
-
-def set(interactor: _Config, value: Any):
-    """Write `value` to the configuration file."""
-    config_obj = interactor()
-    config_obj.set(value)
