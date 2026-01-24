@@ -22,6 +22,12 @@ for dir in [FLOWAT_FILES_PATH, CONFIG_PATH, LOG_PATH]:
 
 
 def get_parser(filename: str) -> ConfigParser:
+    """Base function for parser factories to be used internally by config classes.
+    The parser factories should not take any input value, and return this function's
+    return value with the same inputs.
+
+    :filename: Name of the config file without extension.
+    """
     parser = ConfigParser()
     config_file = Path(CONFIG_PATH, f"{filename}.ini")
     config_file.touch(exist_ok=True)
@@ -31,6 +37,7 @@ def get_parser(filename: str) -> ConfigParser:
 
 
 def get_default_parser() -> ConfigParser:
+    """Factory of parsers for the 'prefs.ini' config file."""
     return get_parser(filename="prefs")
 
 
@@ -40,10 +47,17 @@ class _Config:
         parser_factory: Callable[[], ConfigParser],
         section: str,
         key: str,
-        default: Any | None,
+        default: Any,
     ):
         """Parent that sets logic for interacting with a key that returns a
         single value on a specific configuration file.
+
+        :parser_factory: Function that always returns a `ConfigParser` with an attribute
+          `_config_file` indicating the file to where this parser writes.
+        :section: Name of the section where this config is located.
+        :key: Name of this option in the config file.
+        :default: Default value of this option, must be compatible with the input type
+          of this class' `__set` method.
         """
         self._parser_factory, self._section, self._key, self._default = (
             parser_factory,
@@ -59,13 +73,13 @@ class _Config:
 
     @classmethod
     def get(cls):
-        """Refresh the parser with the current data and return the expected value."""
+        """Get current value of this config, or the default value if not defined."""
         interactor = cls()
         print(interactor)
         return interactor.__get()
 
     @classmethod
-    def set(cls):
+    def set(cls, value: Any):
         """Write `value` to the configuration file."""
         interactor = cls()
         interactor.__set(value)
@@ -76,12 +90,13 @@ class _Config:
         with open(parser._config_file, "w") as configfile:
             parser.write(configfile)
 
-    def __get() -> Any | None:
+    def __get(self) -> Any | None:
         parser = self._parser_factory()
         try:
             return parser.get(self._section, self._key, fallback=self._default)
         except NoOptionError:
-            return None
+            self.__set(value=self._default)
+            return self._default
 
 
 class _ConfigList:
@@ -90,10 +105,17 @@ class _ConfigList:
         parser_factory: Callable[[], ConfigParser],
         section: str,
         key: str,
-        default: Any | None,
+        default: list,
     ):
         """Parent that sets logic for interacting with a key that returns a
         list of values on a specific configuration file.
+
+        :parser_factory: Function that always returns a `ConfigParser` with an attribute
+          `_config_file` indicating the file to where this parser writes.
+        :section: Name of the section where this config is located.
+        :key: Name of this option in the config file.
+        :default: Default value of this option, must be compatible with the input type
+          of this class' `__set` method.
         """
         self._parser_factory, self._section, self._key, self._default = (
             parser_factory,
@@ -127,7 +149,7 @@ class _ConfigList:
 
     @classmethod
     def rm(cls, value: str):
-        """Removes `value` from config list if it is present."""
+        """Removes `value` from config list if it is present. Does nothing otherwise."""
         interactor = cls()
         interactor.__rm(value=value)
 
