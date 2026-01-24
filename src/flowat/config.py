@@ -136,9 +136,10 @@ class _ConfigList:
         try:
             string = parser.get(self._section, self._key)
             string = string.replace("[", "").replace("]", "")
+            list_of_items = string.split(",")
         except NoOptionError:
-            string = ""
-        list_of_items = string.split(",")
+            self.__set(value=self._default)
+            list_of_items = self._default
         return (i.strip() for i in list_of_items if i.strip() != "")
 
     def __set(self, value: list[str]) -> str:
@@ -175,5 +176,5 @@ class BackupPlaces(_ConfigList):
             parser_factory=get_default_parser,
             section="backup",
             key="backup_places",
-            default=None,
+            default=[],
         )
