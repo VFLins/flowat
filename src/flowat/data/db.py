@@ -44,7 +44,7 @@ else:
     CONFIG_PATH = Path.home().joinpath(".config", "Cashd")
     LOG_PATH = Path.home().joinpath(".local", "state", "Cashd", "logs")
 
-DATA_PATH = Path(CASHD_FILES_PATH, "data")
+DATA_PATH = Path(FLOWAT_FILES_PATH, "data")
 DATA_PATH.mkdir(exist_ok=True)
 DB_FILE = Path(DATA_PATH, 'database.db')
 DB_ENGINE = create_engine(f"sqlite:///{DB_FILE}", echo=False)
@@ -75,17 +75,6 @@ class NotRequiredText(types.TypeDecorator):
         return value
 
 
-class RequiredStateAcronym(types.TypeDecorator):
-    impl = String
-    cache_ok = True
-
-    def process_bind_param(self, value, dialect):
-        return fmt_text(value, required=True).upper()
-
-    def process_result_value(self, value, dialect):
-        return value
-
-
 class CurrencyAmount(types.TypeDecorator):
     impl = Numeric
     cache_ok = True
@@ -98,7 +87,7 @@ class CurrencyAmount(types.TypeDecorator):
             return round(Decimal(value), 2)
 
 
-REQUIRED_TYPES = [RequiredStateAcronym, RequiredText, PhoneNumberText]
+REQUIRED_TYPES = [RequiredText]
 
 
 def fmt_text(inp: str | None, required: bool = False) -> str:
