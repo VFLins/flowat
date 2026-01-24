@@ -2,12 +2,11 @@ from configparser import (
     ConfigParser,
     NoOptionError,
     NoSectionError,
-    DuplicateSectionError
+    DuplicateSectionError,
 )
-from typing import Any
+from typing import Any, Callable, Iterator
 from pathlib import Path
 from sys import platform
-
 
 if platform == "win32":
     FLOWAT_FILES_PATH = Path.home().joinpath("AppData", "Local", "Flowat")
@@ -22,7 +21,6 @@ for dir in [FLOWAT_FILES_PATH, CONFIG_PATH, LOG_PATH]:
     dir.mkdir(parents=True, exist_ok=True)
 
 
-# https://stackoverflow.com/a/31909086
 def get_parser(filename: str) -> ConfigParser:
     parser = ConfigParser()
     config_file = Path(CONFIG_PATH, f"{filename}.ini")
@@ -37,44 +35,145 @@ def get_default_parser() -> ConfigParser:
 
 
 class _Config:
-    def __init__(self, parser: ConfigParser, section: str, key: str, default: Any | None):
-        """Parent metaclass that sets logic for interacting with a single key on a
-        specific configuration file.
+    def __init__(
+        self,
+        parser_factory: Callable[[], ConfigParser],
+        section: str,
+        key: str,
+        default: Any | None,
+    ):
+        """Parent that sets logic for interacting with a key that returns a
+        single value on a specific configuration file.
         """
-        self._parser, self._section, self._key, self._default = (
-            parser, section, key, default
+        self._parser_factory, self._section, self._key, self._default = (
+            parser_factory,
+            section,
+            key,
+            default,
         )
+        parser = self._parser_factory()
         if not parser.has_section(section):
             parser.add_section(section=section)
+            with open(parser._config_file, "w") as configfile:
+                parser.write(configfile)
 
-    def _refresh(self):
-        self._parser.read(self._parser._config_file)
+    @classmethod
+    def get(cls):
+        """Refresh the parser with the current data and return the expected value."""
+        interactor = cls()
+        print(interactor)
+        return interactor.__get()
 
-    def set(self, value: Any):
-        self._parser.set(self._section, self._key, str(value))
+    @classmethod
+    def set(cls):
+        """Write `value` to the configuration file."""
+        interactor = cls()
+        interactor.__set(value)
 
-    def get() -> Any:
-        self._refresh()
-        return self._parser.get(self._section, self._key, fallback=self._default)
+    def __set(self, value: Any):
+        parser = self._parser_factory()
+        parser.set(self._section, self._key, str(value))
+        with open(parser._config_file, "w") as configfile:
+            parser.write(configfile)
+
+    def __get() -> Any | None:
+        parser = self._parser_factory()
+        try:
+            return parser.get(self._section, self._key, fallback=self._default)
+        except NoOptionError:
+            return None
 
 
-class BackupPlaces(_Config):
+class _ConfigList:
+    def __init__(
+        self,
+        parser_factory: Callable[[], ConfigParser],
+        section: str,
+        key: str,
+        default: Any | None,
+    ):
+        """Parent that sets logic for interacting with a key that returns a
+        list of values on a specific configuration file.
+        """
+        self._parser_factory, self._section, self._key, self._default = (
+            parser_factory,
+            section,
+            key,
+            default,
+        )
+        parser = self._parser_factory()
+        if not parser.has_section(section):
+            parser.add_section(section)
+            with open(parser._config_file, "w") as configfile:
+                parser.write(configfile)
+
+    @classmethod
+    def get(cls) -> list[Any]:
+        """Get list from config file as a python list."""
+        interactor = cls()
+        return list(interactor.__get())
+
+    @classmethod
+    def set(cls, value: list):
+        """Writes a a python list to the config file, replacing the existing one."""
+        interactor = cls()
+        interactor.__set(value=[str(i) for i in value])
+
+    @classmethod
+    def add(cls, value: str):
+        """Adds a `value` to the config list."""
+        interactor = cls()
+        interactor.__add(value=value)
+
+    @classmethod
+    def rm(cls, value: str):
+        """Removes `value` from config list if it is present."""
+        interactor = cls()
+        interactor.__rm(value=value)
+
+    def __get(self) -> Iterator[str]:
+        parser = self._parser_factory()
+        try:
+            string = parser.get(self._section, self._key)
+            string = string.replace("[", "").replace("]", "")
+        except NoOptionError:
+            string = ""
+        list_of_items = string.split(",")
+        return (i.strip() for i in list_of_items if i.strip() != "")
+
+    def __set(self, value: list[str]) -> str:
+        string_list = (
+            str(value)
+            .replace("[", "[\n\t")
+            .replace(", ", ",\n\t")
+            .replace("'", "")
+            .replace("]", "\n]")
+            .replace("\\\\", "\\")
+        )
+        parser = self._parser_factory()
+        parser.set(self._section, self._key, string_list)
+        with open(parser._config_file, "w") as configfile:
+            parser.write(configfile)
+
+    def __add(self, value: str):
+        current = [i for i in self.__get()]
+        new = current + [value]
+        self.__set(value=new)
+
+    def __rm(self, value: str):
+        current = [i for i in self.__get()]
+        try:
+            current.remove(value)
+        except ValueError:
+            return
+        self.__set(value=current)
+
+
+class BackupPlaces(_ConfigList):
     def __init__(self):
         super().__init__(
-            parser=get_default_parser(),
+            parser_factory=get_default_parser,
             section="backup",
             key="backup_places",
             default=None,
         )
-
-
-def get(interactor: _Config) -> Any:
-    """Refresh the parser with the current data and return the expected value."""
-    config_obj = interactor()
-    return interactor.get()
-
-
-def set(interactor: _Config, value: Any):
-    """Write `value` to the configuration file."""
-    config_obj = interactor()
-    config_obj.set(value)
