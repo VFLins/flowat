@@ -14,7 +14,7 @@ from datetime import date
 from .base import BaseSection
 
 from flowat.const import style, icon
-from flowat.plot.bar import simple_columnplot, interactive_columnplot
+from flowat.plot.bar import colplot
 from flowat.form.date import HorizontalDateForm
 from flowat.form.elem import FormField, Heading
 
@@ -30,18 +30,9 @@ class ExpensesSection(BaseSection):
             "Conta (água, telefone, etc.)",
             "Fatura do cartão de crédito",
         ]
-        self.image_expense = ImageView(
-            simple_columnplot(
-                x=["Dez. 2025", "Jan. 2026", "Fev. 2026"],
-                y=[24133, 23122, 22011],
-                title="Gastos registrados",
-            )
-        )
         self.plot_expense = WebView(
-            style=Pack(
-                width=style.CONTENT_WIDTH, height=220, background_color="transparent"
-            ),
-            content=interactive_columnplot(
+            style=Pack(width=style.CONTENT_WIDTH, height=220),
+            content=colplot(
                 x=["Dez. 2025", "Jan. 2026", "Fev. 2026", "Mar. 2026", "Abr. 2026"],
                 y=[24133, 23122, 12011, 954, 97],
             ),
@@ -133,7 +124,7 @@ class ExpensesSection(BaseSection):
         widget._n_loads = n_loads + 1
         if widget._n_loads % 2 == 1:
             return
-        widget.content = interactive_columnplot(
+        widget.content = colplot(
             x=["Dez. 2025", "Jan. 2026", "Fev. 2026", "Mar. 2026", "Abr. 2026"],
             y=[24133, 23122, 12011, 954, 297],
         )

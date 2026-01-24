@@ -15,7 +15,9 @@ splash_background_color = "#D81B60"
 [tool.briefcase.app.flowat]
 formal_name = "Flowat"
 description = "Acompanhe o fluxo de caixa de sua empresa com facilidade."
-long_description = """More details about the app should go here.
+long_description = """Este aplicativo permite coletar os dados de entrada e
+saída de caixa da sua empresa rapidamente. Acompanhe suas contas à pagar e
+emita relatórios da saúde financeira da sua empresa com facilidade.
 """
 sources = [
     "src/flowat",
@@ -25,9 +27,8 @@ test_sources = [
 ]
 
 requires = [
-    "matplotlib",
-    "plotly",
-    "pandas"
+    "plotly~=6.5.2",
+    "pandas~=3.0.0"
 ]
 test_requires = [
     "pytest",
