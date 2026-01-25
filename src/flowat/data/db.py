@@ -36,17 +36,17 @@ import re
 
 
 if platform == "win32":
-    FLOWAT_FILES_PATH = Path.home().joinpath("AppData", "Local", "Cashd")
+    FLOWAT_FILES_PATH = Path.home().joinpath("AppData", "Local", "Flowat")
     CONFIG_PATH = Path(FLOWAT_FILES_PATH, "configs")
     LOG_PATH = Path(FLOWAT_FILES_PATH, "logs")
 else:
-    FLOWAT_FILES_PATH = Path.home().joinpath(".local", "share", "Cashd")
-    CONFIG_PATH = Path.home().joinpath(".config", "Cashd")
-    LOG_PATH = Path.home().joinpath(".local", "state", "Cashd", "logs")
+    FLOWAT_FILES_PATH = Path.home().joinpath(".local", "share", "Flowat")
+    CONFIG_PATH = Path.home().joinpath(".config", "Flowat")
+    LOG_PATH = Path.home().joinpath(".local", "state", "Flowat", "logs")
 
 DATA_PATH = Path(FLOWAT_FILES_PATH, "data")
 DATA_PATH.mkdir(exist_ok=True)
-DB_FILE = Path(DATA_PATH, 'database.db')
+DB_FILE = Path(DATA_PATH, "database.db")
 DB_ENGINE = create_engine(f"sqlite:///{DB_FILE}", echo=False)
 
 # VALIDATION
@@ -163,7 +163,8 @@ class DeclaredTable(DeclarativeBase):
     def required_fieldnames(self) -> List[str]:
         """Names of every required fields in this table."""
         return [
-            colname for colname in self.data.keys()
+            colname
+            for colname in self.data.keys()
             if self.types[colname] in REQUIRED_TYPES
         ]
 
@@ -187,10 +188,7 @@ class DeclaredTable(DeclarativeBase):
         with Session(bind=engine) as ses:
             res = ses.execute(stmt).first()
             if res is None:
-                raise ValueError(
-                    f"{row_id=} not present in '{
-                        self.__tablename__}.Id'."
-                )
+                raise ValueError(f"{row_id=} not present in '{self.__tablename__}.Id'.")
             row = res[0]
             for col in self.__table__.columns:
                 value = getattr(row, col.name, None)
@@ -215,9 +213,8 @@ class DeclaredTable(DeclarativeBase):
 
         :raises AttributeError: If `self.Id` is None or not defined.
         """
-        if not self.Id:
-            raise AttributeError(
-                f"Expected `self.Id` to be integer, got {self.Id=}.")
+        if (type(self.Id) is not int) or (self.Id < 1):
+            raise AttributeError(f"Expected `self.Id` to be integer, got {self.Id=}.")
         cls = type(self)
         with Session(bind=engine) as ses:
             stmt = update(cls).where(cls.Id == self.Id).values(**self.data)
@@ -287,3 +284,13 @@ class RevenueEntry(DeclaredTable):
     TransactionDate = Column("TransactionDate", Date)
     TransactionValue = Column("TransactionValue", CurrencyAmount)
 
+
+class ScannedInvoiceFile(DeclaredTable):
+    __tablename__ = "scanned_invoice_files"
+    ScannedRevenueEntryRelation: Mapped["RevenueEntry"] = relationship()
+
+    DocumentIdentifier = Column("DocumentIdentifier", RequiredText, nullable=False)
+    IdRevenueEntry: Mapped[int] = Column("IdRevenueEntry", ForeignKey("revenues.Id"))
+
+
+DeclaredTable.metadata.create_all(DB_ENGINE)
