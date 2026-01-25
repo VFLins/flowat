@@ -117,7 +117,7 @@ def fmt_currency(inp: Any) -> int:
     return int(inp)
 
 
-class dec_base(DeclarativeBase):
+class DeclaredTable(DeclarativeBase):
     Id = Column("Id", Integer, primary_key=True)
 
     @staticmethod
@@ -168,7 +168,7 @@ class dec_base(DeclarativeBase):
         ]
 
     def required_fields_are_filled(self) -> bool:
-        """Returns a boolean value indicating if all required fields for this table
+        """Returnse a boolean value indicating if all required fields for this table
         are filled.
         """
         return all(getattr(self, col) for col in self.required_fieldnames)
@@ -245,4 +245,45 @@ class dec_base(DeclarativeBase):
             stmt = delete(cls).where(cls.Id == self.Id)
             ses.execute(stmt)
             ses.commit()
+
+
+class ExpenseType(DeclaredTable):
+    __tablename__ = "expense_types"
+    ExpenseEntryRelation: Mapped[List["ExpenseEntry"]] = relationship()
+
+    Name = Column("Name", RequiredText, nullable=False)
+
+
+class ExpenseEntry(DeclaredTable):
+    __tablename__ = "expenses"
+    ExpenseTypeRelation: Mapped["ExpenseType"] = relationship(
+        back_populates="ExpenseEntryRelation"
+    )
+
+    IdExpenseType: Mapped[int] = Column("IdExpenseType", ForeignKey("expense_types.Id"))
+    TimeStamp: Mapped[datetime] = Column(DateTime(timezone=True))
+    Description = Column("Description", RequiredText)
+    Barcode = Column("Barcode", NotRequiredText)
+    TransactionDate = Column("TransactionDate", Date)
+    TransactionValue = Column("TransactionValue", CurrencyAmount)
+
+
+class RevenueType(DeclaredTable):
+    __tablename__ = "revenue_types"
+    RevenueEntryRelation: Mapped[List["RevenueEntry"]] = relationship()
+
+    Name = Column("Name", RequiredText, nullable=False)
+
+
+class RevenueEntry(DeclaredTable):
+    __tablename__ = "revenues"
+    RevenueTypeRelation: Mapped["RevenueType"] = relationship(
+        back_populates="RevenueEntryRelation"
+    )
+
+    IdRevenueType: Mapped[int] = Column("IdRevenueType", ForeignKey("revenue_types.Id"))
+    TimeStamp: Mapped[datetime] = Column(DateTime(timezone=True))
+    Description = Column("Description", RequiredText)
+    TransactionDate = Column("TransactionDate", Date)
+    TransactionValue = Column("TransactionValue", CurrencyAmount)
 
