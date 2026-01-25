@@ -95,7 +95,7 @@ class _Config:
         try:
             return parser.get(self._section, self._key, fallback=self._default)
         except NoOptionError:
-            self.__set(value=self._default)
+            self.__set(value=str(self._default))
             return self._default
 
 
@@ -136,7 +136,7 @@ class _ConfigList:
         return list(interactor.__get())
 
     @classmethod
-    def set(cls, value: list):
+    def set(cls, value: list, **kwargs):
         """Writes a a python list to the config file, replacing the existing one."""
         interactor = cls()
         interactor.__set(value=[str(i) for i in value])
@@ -164,7 +164,7 @@ class _ConfigList:
             list_of_items = self._default
         return (i.strip() for i in list_of_items if i.strip() != "")
 
-    def __set(self, value: list[str]) -> str:
+    def __set(self, value: list[str]):
         string_list = (
             str(value)
             .replace("[", "[\n\t")
@@ -190,6 +190,21 @@ class _ConfigList:
         except ValueError:
             return
         self.__set(value=current)
+
+
+class PageSize(_Config):
+    def __init__(self):
+        super().__init__(
+            parser_factory=get_default_parser,
+            section="default",
+            key="page_size",
+            default=200,
+        )
+
+    @classmethod
+    def get(self) -> int:
+        value = super().get()
+        return int(value)
 
 
 class BackupPlaces(_ConfigList):
