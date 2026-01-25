@@ -27,6 +27,7 @@ from sqlalchemy.orm import (
     Session,
 )
 from typing import List, Iterable, Literal, Any, Self, Dict
+from collections import namedtuple
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -49,8 +50,13 @@ DATA_PATH.mkdir(exist_ok=True)
 DB_FILE = Path(DATA_PATH, "database.db")
 DB_ENGINE = create_engine(f"sqlite:///{DB_FILE}", echo=False)
 
+
+# DATA TYPES
+
+IdentifiedValue = namedtuple("IdentifiedValue", ["Id", "Value"])
+
+
 # VALIDATION
-####################
 
 
 class RequiredText(types.TypeDecorator):
@@ -250,6 +256,12 @@ class ExpenseType(DeclaredTable):
 
     Name = Column("Name", RequiredText, nullable=False)
 
+    def get_items(self, engine: Engine = DB_ENGINE) -> list[IdentifiedValue]:
+        """Lists it's data in Python dictionaries with two keys ('Id', 'Name')."""
+        with Session(engine) as ses:
+            res = ses.execute(select(ExpenseType.Id, ExpenseType.Name)).all()
+            return (IdentifiedValue(Id=r.Id, Value=r.Name) for r in res)
+
 
 class ExpenseEntry(DeclaredTable):
     __tablename__ = "expenses"
@@ -270,6 +282,12 @@ class RevenueType(DeclaredTable):
     RevenueEntryRelation: Mapped[List["RevenueEntry"]] = relationship()
 
     Name = Column("Name", RequiredText, nullable=False)
+
+    def get_items(self, engine: Engine = DB_ENGINE) -> list[IdentifiedValue]:
+        """Lists it's data in Python dictionaries with two keys ('Id', 'Name')."""
+        with Session(engine) as ses:
+            res = ses.execute(select(RevenueType.Id, RevenueType.Name)).all()
+            return (IdentifiedValue(Id=r.Id, Value=r.Name) for r in res)
 
 
 class RevenueEntry(DeclaredTable):
