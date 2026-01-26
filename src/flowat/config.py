@@ -4,6 +4,7 @@ from configparser import (
     NoSectionError,
     DuplicateSectionError,
 )
+from decimal import Decimal
 from typing import Any, Callable, Iterator
 from pathlib import Path
 from sys import platform
@@ -205,6 +206,21 @@ class PageSize(_Config):
     def get(self) -> int:
         value = super().get()
         return int(value)
+
+
+class MaxAllowedValue(_Config):
+    def __init__(self):
+        super().__init__(
+            parser_factory=get_default_parser,
+            section="default",
+            key="max_allowed_value",
+            default=9999999
+        )
+
+    @classmethod
+    def get(self) -> Decimal:
+        value = super().get()
+        return Decimal(value)
 
 
 class BackupPlaces(_ConfigList):
