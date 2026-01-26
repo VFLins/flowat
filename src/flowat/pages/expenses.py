@@ -69,11 +69,21 @@ class ExpensesSection(BaseSection):
         self.expense_form = Column(
             style=style.MAIN_CONTAINER,
             children=[
-                FormField(
-                    id="expense_form_type_selection",
-                    input_widget=Selection(items=expense_categories),
-                    label="Categoria",
-                    unstyled=True,
+                Row(
+                    style=Pack(align_items="center"),
+                    children=[
+                        FormField(
+                            id="expense_form_type_selection",
+                            input_widget=Selection(items=expense_categories),
+                            label="Categoria",
+                            unstyled=True,
+                        ),
+                        Button(
+                            id="expense_form_edit_type",
+                            icon=icon.CIRCLE_PLUS,
+                            on_press=self.show_expense_type_dialog,
+                        ),
+                    ],
                 ),
                 FormField(
                     id="expense_form_description_search",
@@ -151,6 +161,9 @@ class ExpensesSection(BaseSection):
         self.main_container.style = style.CENTERED_MAIN_CONTAINER
         new_container = self._get_main_container()
         self.main_container.add(new_container)
+
+    def show_expense_type_dialog(self, widget: Button):
+        """Show a dialog where the user can manage expense type options."""
 
     def _get_main_container(self):
         """Returns the 'common interaction' container, or 'first interaction' when

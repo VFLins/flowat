@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from copy import copy
 import re
 
-from .db import DB_ENGINE
+from .db import DB_ENGINE, ExpenseType, RevenueType
 from flowat import config
 
 
@@ -205,3 +205,22 @@ class _DataSource:
         if self.is_searchable():
             self._fetch_metadata(search_text=value)
 
+
+class ExpenseTypeSource(_DataSource):
+    def __init__(self, engine: Engine = DB_ENGINE):
+        super().__init__(
+            select_stmt=select(ExpenseType.Id, ExpenseType.Name),
+            paginated=False,
+            searchable=False,
+            engine=engine
+        )
+
+
+class RevenueTypeSource(_DataSource):
+    def __init__(self, engine: Engine = DB_ENGINE):
+        super().__init__(
+            select_stmt=select(RevenueType.Id, RevenueType.Name),
+            paginated=False,
+            searchable=False,
+            engine=engine
+        )
