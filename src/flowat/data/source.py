@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from copy import copy
 import re
 
-from .db import DB_ENGINE, ExpenseType, RevenueType
+from .db import DB_ENGINE, ExpenseType, RevenueType, ExpenseEntry, RevenueEntry
 from flowat import config
 
 
@@ -13,7 +13,6 @@ class _DataSource:
         self,
         select_stmt: Select,
         paginated: bool = True,
-        searchable: bool = False,
         search_colnames: Iterable[str] = [],
         engine: Engine = DB_ENGINE,
     ):
@@ -23,18 +22,14 @@ class _DataSource:
         :param select_stmt: A `sqlalchemy.sql.expression.Select` that selects the data
           managed by this data source.
         :param paginated: Wether this data source handle pagination.
-        :param searchable: Wether this data source handles searches to subset the
-          `select_stmt` results.
         :param search_colnames: Name of the columns where the search will be applied.
         :param engine: Engine pointing to the database where the data will be handled.
 
         :raises ValueError: If `searchable=True`, and `search_colnames` is an empty list,
           or if one of the selected column names are not present in the select query.
         """
-        if searchable and (len(search_colnames) == 0):
-            raise ValueError(
-                "Expecting at least one search colname on searchable data source."
-            )
+        serchable = bool(len(search_colnames))
+        sortable = bool(len(sort_colnames))
         selected_colnames = select_stmt.selected_columns.keys()
         for col in search_colnames:
             if col not in selected_colnames:
@@ -75,7 +70,10 @@ class _DataSource:
             self._search_text = search_text
         # `nrows`
         with Session(self.ENGINE) as ses:
-            select_stmt = self.searched_select_stmt(search_text)
+            select_stmt = self.searched_select_stmt(
+                stmt=self.SELECT_STMT,
+                search_text=search_text
+            )
             nrows_stmt = select(func.count()).select_from(select_stmt.subquery())
             self.nrows = ses.execute(nrows_stmt).scalar()
         if self.is_paginated():
@@ -96,7 +94,10 @@ class _DataSource:
         """Assigns the data based on the current metadata values to
         `current_data`.
         """
-        stmt = self.searched_select_stmt(search_text=self.search_text)
+        stmt = self.searched_select_stmt(
+            stmt=self.SELECT_STMT,
+            search_text=self.search_text
+        )
         if self.is_paginated():
             stmt = stmt.limit(self.rows_per_page).offset(self.min_idx)
         with Session(self.ENGINE) as ses:
@@ -134,25 +135,37 @@ class _DataSource:
         except AttributeError:
             return False
 
-    def searched_select_stmt(self, search_text: str = "") -> Select:
-        """If this is a searchable data source, adds a search logic to `self.SELECT_STMT`
-        and returns it. Returns only `self.SELECT_STMT` otherwise, or if `search_text`
-        is an empty string.
+    def searched_select_stmt(self, stmt: Select, search_text: str = "") -> Select:
+        """If this is a searchable data source, adds a search logic to `stmt` and
+        returns it. Returns only `stmt` otherwise, or if `search_text` is an empty
+        string.
 
         :param search_text: Text with all the keywords that will be inserted into the
           searched SELECT query.
         """
+        stmt_copy = copy(stmt)
         if not self.is_searchable() or (search_text == ""):
-            return self.SELECT_STMT
+            return stmt_copy
         keywords = re.findall(r"\w+", search_text)
-        stmt = copy(self.SELECT_STMT)
         for kw in keywords:
             kw_in_cols = [
                 self.SELECT_STMT.selected_columns[col].ilike(f"%{kw}%")
                 for col in self.SEARCH_COLNAMES
             ]
-            stmt = stmt.where(or_(*kw_in_cols))
-        return stmt
+            stmt_copy = stmt_copy.where(or_(*kw_in_cols))
+        return stmt_copy
+
+    def sorted_select_stmt(self, stmt: Select, colname: str, ascending: bool = True) -> Select:
+        """Adds a sort logic to `stmt` and returns it. If this source is not sortable
+        or colname cannot be found, returns `stmt` with no modifications.
+
+        :param colname: Column name defined in `self.SELECT_STMT`.
+        :param ascending: Indicates if sorting should be ascending or not.
+        """
+        stmt_copy = copy(stmt)
+        if not self.is_sortable() or (colname not in self.SORT_COLNAMES):
+            return stmt_copy
+        return stmt_copy.order_by(text(f"{colname} {'ASC' if ascending else 'DESC'}"))
 
     @property
     def current_page(self) -> int:
@@ -211,7 +224,6 @@ class ExpenseTypeSource(_DataSource):
         super().__init__(
             select_stmt=select(ExpenseType.Id, ExpenseType.Name),
             paginated=False,
-            searchable=False,
             engine=engine
         )
 
@@ -221,6 +233,20 @@ class RevenueTypeSource(_DataSource):
         super().__init__(
             select_stmt=select(RevenueType.Id, RevenueType.Name),
             paginated=False,
-            searchable=False,
             engine=engine
+        )
+
+class ExpensesSource(_DataSource):
+    def __init(self, engine: Engine = DB_ENGINE):
+        stmt = select(
+            ExpenseEntry.Id,
+            RevenueType.Name.label("TransactionType"),
+            ExpenseEntry.Description,
+            ExpenseEntry.TransactionDate,
+            ExpenseEntry.TransactionValue,
+        ).join(RevenueType)
+        super().__init__(
+            select_stmt=stmt,
+            paginated=True,
+            =["Adicionado", "Vencimento"]
         )
