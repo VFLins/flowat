@@ -7,6 +7,7 @@ from toga.widgets.button import Button
 from toga.widgets.table import Table
 from toga.widgets.label import Label
 from toga.widgets.box import Box, Row, Column
+from toga.window import Window
 from toga.style import Pack
 
 from datetime import date
@@ -14,22 +15,18 @@ from datetime import date
 from .base import BaseSection
 
 from flowat.const import style, icon
+from flowat.data import db, source
 from flowat.plot.bar import colplot
 from flowat.form.date import HorizontalDateForm
 from flowat.form.elem import FormField, Heading
 
 
 class ExpensesSection(BaseSection):
+    expense_type_source = source.ExpenseTypeSource()
+
     def __init__(self, app):
         super().__init__(app=app)
-        expense_categories = [
-            "Boleto bancário",
-            "Cheque",
-            "Folha de pagamento",
-            "Tributo",
-            "Conta (água, telefone, etc.)",
-            "Fatura do cartão de crédito",
-        ]
+        self._ensure_expense_types()
         self.plot_expense = WebView(
             style=Pack(width=style.CONTENT_WIDTH, height=220),
             content=colplot(
@@ -38,10 +35,10 @@ class ExpensesSection(BaseSection):
             ),
             on_webview_load=self.reload_plot,
         )
-
         self.date_input = HorizontalDateForm(
             id="expense_form_duedate", value=date.today()
         )
+
         self.first_interaction = Column(
             style=style.CENTERED_MAIN_CONTAINER,
             children=[
@@ -69,21 +66,13 @@ class ExpensesSection(BaseSection):
         self.expense_form = Column(
             style=style.MAIN_CONTAINER,
             children=[
-                Row(
-                    style=Pack(align_items="center"),
-                    children=[
-                        FormField(
-                            id="expense_form_type_selection",
-                            input_widget=Selection(items=expense_categories),
-                            label="Categoria",
-                            unstyled=True,
-                        ),
-                        Button(
-                            id="expense_form_edit_type",
-                            icon=icon.CIRCLE_PLUS,
-                            on_press=self.show_expense_type_dialog,
-                        ),
-                    ],
+                FormField(
+                    id="expense_form_type_selection",
+                    input_widget=Selection(
+                        items=[r.Name for r in self.expense_type_source.current_data],
+                    ),
+                    label="Categoria",
+                    unstyled=True,
                 ),
                 FormField(
                     id="expense_form_description_search",
@@ -128,6 +117,7 @@ class ExpensesSection(BaseSection):
             style=Pack(align_items="center", flex=1, direction="column"),
             children=[self.main_container],
         )
+
 
     def reload_plot(self, widget: WebView):
         n_loads = getattr(widget, "_n_loads", 0)
@@ -176,3 +166,18 @@ class ExpensesSection(BaseSection):
         no_expense_data = True
         no_data = True
         container = Box()
+
+    def _ensure_expense_types(self):
+        expense_categories = [
+            "Boleto Bancário",
+            "Cheque",
+            "Folha de Pagamento",
+            "Tributo",
+            "Conta (Água, Telefone, Etc.)",
+            "Fatura Do Cartão De Crédito",
+        ]
+        current_data = [r.Name for r in self.expense_type_source.current_data]
+        for categ in expense_categories:
+            if categ not in current_data:
+                et = db.ExpenseType(Name=categ)
+                et.write()

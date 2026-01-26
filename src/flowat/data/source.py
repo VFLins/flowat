@@ -1,5 +1,5 @@
 from typing import Literal, Iterable
-from sqlalchemy import Engine, Select, func, select, _or
+from sqlalchemy import Engine, Select, func, select, or_
 from sqlalchemy.orm import Session
 from copy import copy
 import re
