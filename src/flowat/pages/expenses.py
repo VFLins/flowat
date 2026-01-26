@@ -10,12 +10,12 @@ from toga.widgets.box import Box, Row, Column
 from toga.window import Window
 from toga.style import Pack
 
-from datetime import date
+from datetime import date, datetime
 
 from .base import BaseSection
 
 from flowat.const import style, icon
-from flowat.data import db, source
+from flowat.data import db, source, fmt
 from flowat.plot.bar import colplot
 from flowat.form.date import HorizontalDateForm
 from flowat.form.elem import FormField, Heading
@@ -62,6 +62,20 @@ class ExpensesSection(BaseSection):
                     style=style.BIG_BUTTON,
                 ),
             ],
+        )
+        self.expense_summary = Column(
+            style=style.MAIN_CONTAINER,
+            children=[
+                self.plot_expense,
+                Button(
+                    icon=icon.CIRCLE_PLUS,
+                    style=style.SIMPLE_BUTTON,
+                    on_press=self.show_form
+                ),
+                Table(
+                    headings=["Descrição", "Valor", "Vencimento"]
+                )
+            ]
         )
         self.expense_form = Column(
             style=style.MAIN_CONTAINER,
@@ -111,13 +125,12 @@ class ExpensesSection(BaseSection):
         )
 
         self.main_container = Box(
-            style=style.CENTERED_MAIN_CONTAINER, children=[self.first_interaction]
+            style=style.CENTERED_MAIN_CONTAINER, children=[self._get_main_container()]
         )
         self.full_contents = Box(
             style=Pack(align_items="center", flex=1, direction="column"),
             children=[self.main_container],
         )
-
 
     def reload_plot(self, widget: WebView):
         n_loads = getattr(widget, "_n_loads", 0)
@@ -133,6 +146,26 @@ class ExpensesSection(BaseSection):
         """Prompts to user to confirm the inserted data, in the positive case, writes
         to the database. Does nothing otherwise.
         """
+        type_field: Selection = self._app.widgets["expense_form_type_selection"]
+        type_map = {name: id for id, name in self.expense_type_source.current_data}
+        barcode_fmt = fmt.StringToBarcodeITF25(
+            user_input=self._app.widgets["expense_form_barcode"].input.value,
+            field_name="Código de Barra",
+        )
+        value_fmt = fmt.StringToCurrency(
+            user_input=self._app.widgets["expense_form_value"].input.value,
+            field_name="Valor",
+        )
+        expense = db.ExpenseEntry(
+            IdExpenseType=type_map[type_field.input.value],
+            TimeStamp=datetime.now(),
+            Description=self._app.widgets["expense_form_description_search"].input.value,
+            Barcode=barcode_fmt.value,
+            TransactionDate=self.date_input.value,
+            TransactionValue=value_fmt.value,
+        )
+        # TODO: add confirmation dialog
+        expense.write()
         self.show_main_content(widget=widget)
 
     def show_form(self, widget: Button):
@@ -148,7 +181,11 @@ class ExpensesSection(BaseSection):
         add a new expense.
         """
         self.main_container.clear()
-        self.main_container.style = style.CENTERED_MAIN_CONTAINER
+        expense_data = db.ExpenseEntry()
+        if expense_data.table_is_empty():
+            self.main_container.style = style.CENTERED_MAIN_CONTAINER
+        else:
+            self.main_container.style = style.MAIN_CONTAINER
         new_container = self._get_main_container()
         self.main_container.add(new_container)
 
@@ -160,7 +197,11 @@ class ExpensesSection(BaseSection):
         there is no expense data in the database. The 'first interaction' container
         may include a 'restore backup' button if there's also no revenue data.
         """
-        return self.first_interaction
+        expense_data = db.ExpenseEntry()
+        if expense_data.table_is_empty():
+            return self.first_interaction
+        else:
+            return self.expense_summary
 
     def _refresh_layout(self) -> Box:
         no_expense_data = True

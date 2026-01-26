@@ -55,7 +55,7 @@ class HorizontalDateForm:
         return date(
             int(self.year_container.input.value),
             self._month_number(),
-            int(self.day_container.value),
+            int(self.day_container.input.value),
         )
 
     @value.setter

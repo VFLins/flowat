@@ -19,6 +19,10 @@ class _Formatter:
         if not self._user_input:
             return f"'{self._field_name}' não pode ser vazio"
 
+    def is_valid(self) -> bool:
+        """Verify if the integer is a valid input for currency."""
+        return self.invalid_reason is None
+
 
 class StringToCurrency(_Formatter):
     @property
@@ -51,16 +55,8 @@ class StringToCurrency(_Formatter):
         if self.value > config.MaxAllowedValue.get():
             return f"'{self._field_name}' acima do permitido"
 
-    def is_valid(self) -> bool:
-        """Verify if the integer is a valid input for currency."""
-        return self.invalid_reason is None
-
 
 class StringToBarcodeITF25(_Formatter):
-    def __init__(self, user_input: str):
-        """Checks if user_input string is a valid ITF-25 barcode."""
-        self._user_input = user_input
-
     @property
     def invalid_reason(self) -> str | None:
         if not self._user_input.isdigit():
