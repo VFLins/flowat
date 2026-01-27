@@ -1,5 +1,5 @@
 from typing import Literal, Iterable
-from sqlalchemy import Engine, Select, func, select, or_
+from sqlalchemy import Engine, Select, func, select, or_, text
 from sqlalchemy.orm import Session
 from copy import copy
 import re
@@ -28,8 +28,6 @@ class _DataSource:
         :raises ValueError: If `searchable=True`, and `search_colnames` is an empty list,
           or if one of the selected column names are not present in the select query.
         """
-        serchable = bool(len(search_colnames))
-        sortable = bool(len(sort_colnames))
         selected_colnames = select_stmt.selected_columns.keys()
         for col in search_colnames:
             if col not in selected_colnames:
@@ -41,62 +39,92 @@ class _DataSource:
         if paginated:
             self._current_page = 1
             self._rows_per_page = config.PageSize.get()
-        if searchable:
-            self._search_text = ""
-            self.SEARCH_COLNAMES = search_colnames
         self.SELECT_STMT = select_stmt
         self.ENGINE = engine
-        self._fetch_metadata()
 
-    def _fetch_metadata(self, search_text: str = ""):
-        """Assigns values for attributes containing metadata for the current
-        state of this class's `select_statement`:
+    @property
+    def search_text(self) -> str:
+        """Text that should be used to apply search filters to this datasource."""
+        if self.is_searchable() and hasattr(self, "_search_text"):
+            return self._search_text
+        else:
+            return ""
 
-        - :nrows: Number of rows in this data source. Affected by search text
-          when the data source is searchable.
-
-        If searchable:
-
-        - :search_text: Text with all the keywords that will be inserted into the
-          searched SELECT query.
-
-        If paginated:
-
-        - :min_idx: Index of the first item in the current page;
-        - :max_idx: Index of the last item in the current page.
-        """
-        # `search_text`
+    @search_text.setter
+    def search_text(self, value: str):
         if self.is_searchable():
-            self._search_text = search_text
-        # `nrows`
+            self._search_text = str(value)
+
+    @property
+    def nrows(self) -> int:
+        """Number of rows that should be returned by `current_data`."""
         with Session(self.ENGINE) as ses:
             select_stmt = self.searched_select_stmt(
                 stmt=self.SELECT_STMT,
                 search_text=search_text
             )
             nrows_stmt = select(func.count()).select_from(select_stmt.subquery())
-            self.nrows = ses.execute(nrows_stmt).scalar()
-        if self.is_paginated():
-            # `min_idx`
-            if self.nrows < self._rows_per_page:
-                self.min_idx = 0
-            else:
-                self.min_idx = self._rows_per_page * (self.current_page - 1)
-            # `max_idx`
-            max_idx = self.current_page * self._rows_per_page
-            if self.nrows < max_idx:
-                self.max_idx = self.nrows
-            else:
-                self.max_idx = max_idx
+            return ses.execute(nrows_stmt).scalar()
+
+    @property
+    def min_idx(self) -> int:
+        """Index number of the first row currently displayed by this datasource."""
+        if not self.is_paginated():
+            return 0
+        if self.nrows < self.rows_per_page:
+            return 0
+        else:
+            return self.rows_per_page * (self.current_page - 1)
+
+    @property
+    def max_idx(self) -> int:
+        """Index number of the last row currently displayed by this datasource."""
+        max_idx = self.current_page * self.rows_per_page
+        if self.nrows < max_idx:
+            return self.nrows
+        else:
+            return max_idx
+
+    @property
+    def sort_ascending(self) -> bool:
+        """Indicates if the sorting should be performed in ascending order."""
+        return getattr(self, "_sort_ascending", True)
+
+    @sort_ascending.setter
+    def sort_ascending(self, value: bool):
+        self._sort_ascending = bool(value)
+
+    @property
+    def sort_column(self) -> str:
+        """Column name of the column where the sorting should be performed."""
+        colname = getattr(self, "_sort_column", None)
+        if (colname is None) or (colname not in self.column_names):
+            return colname
+        return self.column_names[0]
+
+    @sort_column.setter
+    def sort_column(self, value: str):
+        self._sort_column = str(value)
+
+    @property
+    def column_names(self) -> str:
+        """Column names returned by this datasource's select statement."""
+        return self.SELECT_STMT.columns.keys()
+
 
     @property
     def current_data(self) -> list:
         """Assigns the data based on the current metadata values to
         `current_data`.
         """
-        stmt = self.searched_select_stmt(
+        stmt = self._get_searched_select_stmt(
             stmt=self.SELECT_STMT,
             search_text=self.search_text
+        )
+        stmt = self._get_sorted_select_stmt(
+            stmt=stmt,
+            colname=self.sort_column,
+            ascending=self.sort_ascending,
         )
         if self.is_paginated():
             stmt = stmt.limit(self.rows_per_page).offset(self.min_idx)
@@ -135,7 +163,7 @@ class _DataSource:
         except AttributeError:
             return False
 
-    def searched_select_stmt(self, stmt: Select, search_text: str = "") -> Select:
+    def _get_searched_select_stmt(self, stmt: Select, search_text: str = "") -> Select:
         """If this is a searchable data source, adds a search logic to `stmt` and
         returns it. Returns only `stmt` otherwise, or if `search_text` is an empty
         string.
@@ -155,7 +183,7 @@ class _DataSource:
             stmt_copy = stmt_copy.where(or_(*kw_in_cols))
         return stmt_copy
 
-    def sorted_select_stmt(self, stmt: Select, colname: str, ascending: bool = True) -> Select:
+    def _get_sorted_select_stmt(self, stmt: Select, colname: str, ascending: bool = True) -> Select:
         """Adds a sort logic to `stmt` and returns it. If this source is not sortable
         or colname cannot be found, returns `stmt` with no modifications.
 
@@ -163,23 +191,28 @@ class _DataSource:
         :param ascending: Indicates if sorting should be ascending or not.
         """
         stmt_copy = copy(stmt)
-        if not self.is_sortable() or (colname not in self.SORT_COLNAMES):
-            return stmt_copy
-        return stmt_copy.order_by(text(f"{colname} {'ASC' if ascending else 'DESC'}"))
+        self.sort_ascending = ascending
+        self.sort_column = colname
+        colobj = stmt_copy.c.get(colname)
+        if colobj:
+            if ascending:
+                col_order = colobj.asc()
+            else:
+                col_order = colobj.desc()
+            return stmt_copy.order_by(col_order)
+        return stmt_copy
 
     @property
     def current_page(self) -> int:
         """Current page number."""
         if not self.is_paginated():
-            raise AttributeError(
-                "Cannot get 'current_page' on a data source without pagination."
-            )
+            return 1
         return self._current_page
 
     @property
     def rows_per_page(self) -> int:
-        self._rows_per_page = config.PageSize.get()
-        return self._rows_per_page
+        """Maximum number of rows per page in any datasource."""
+        return config.PageSize.get()
 
     def fetch_next_page(self):
         """Advances one page and update `current_data`. Does nothing if already
@@ -188,7 +221,6 @@ class _DataSource:
         if self.max_idx == self.nrows:
             return
         self._current_page = self._current_page + 1
-        self._fetch_metadata()
 
     def fetch_previous_page(self):
         """Backtracks one page and update `current_data`. Does nothing if already
@@ -197,26 +229,12 @@ class _DataSource:
         if self._current_page == 1:
             return
         self._current_page = self._current_page - 1
-        self._fetch_metadata()
 
     def update_date_format(self, date_freq: Literal["m", "w", "d"]):
         """Updates `self.SELECT_STMT` to reflect the date frequency requested. Does
-        nothing if the data source can't accept date frequency updates, or if `date_freq`
-        is not one of ['m', 'w', 'd'].
+        nothing if the data source can't accept date frequency updates.
         """
         pass
-
-    @property
-    def search_text(self) -> str:
-        """If searchable, returns the last provided `search_text`, or an empty
-        string otherwise.
-        """
-        return getattr(self, "_search_text", "")
-
-    @search_text.setter
-    def search_text(self, value: str):
-        if self.is_searchable():
-            self._fetch_metadata(search_text=value)
 
 
 class ExpenseTypeSource(_DataSource):
@@ -248,5 +266,4 @@ class ExpensesSource(_DataSource):
         super().__init__(
             select_stmt=stmt,
             paginated=True,
-            =["Adicionado", "Vencimento"]
         )
