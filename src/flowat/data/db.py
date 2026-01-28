@@ -90,10 +90,10 @@ class CurrencyAmount(types.TypeDecorator):
 
     def process_result_value(self, value, dialect):
         if value:
-            return round(Decimal(value), 2)
+            return round(Decimal(value / 100), 2)
 
 
-REQUIRED_TYPES = [RequiredText]
+REQUIRED_TYPES = [RequiredText, Date, DateTime, CurrencyAmount]
 
 
 def fmt_text(inp: str | None, required: bool = False) -> str:
@@ -263,19 +263,19 @@ class ExpenseEntry(DeclaredTable):
         back_populates="ExpenseEntryRelation"
     )
 
-    IdExpenseType: Mapped[int] = Column("IdExpenseType", ForeignKey("expense_types.Id"))
-    TimeStamp: Mapped[datetime] = Column(DateTime(timezone=True))
-    Description = Column("Description", RequiredText)
+    IdExpenseType: Mapped[int] = Column("IdExpenseType", ForeignKey("expense_types.Id"), nullable=False)
+    TimeStamp: Mapped[datetime] = Column(DateTime(timezone=True), nullable=False)
+    Description = Column("Description", RequiredText, nullable=False)
     Barcode = Column("Barcode", NotRequiredText)
-    TransactionDate = Column("TransactionDate", Date)
-    TransactionValue = Column("TransactionValue", CurrencyAmount)
+    TransactionDate = Column("TransactionDate", Date, nullable=False)
+    TransactionValue = Column("TransactionValue", CurrencyAmount, nullable=False)
 
     def __repr__(self) -> str:
         return (
             f"{self.Description}\n"
             f"Criado: {self.TimeStamp}\n"
             f"Código de barras: {self.Barcode}\n"
-            f"Valor: R$ {self.TransactionValue/100:.2f}\n"
+            f"Valor: R$ {self.TransactionValue:.2f}\n"
             f"Vencimento: {self.TransactionDate}"
         )
 

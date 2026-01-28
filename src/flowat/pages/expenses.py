@@ -43,23 +43,15 @@ class ExpensesSection(BaseSection):
             id="expense_form_duedate", value=date.today()
         )
         self.expenses_list = Table(
-            style=Pack(flex=1, height=180),
+            style=Pack(flex=1),
             on_select=self._on_select_expense,
             headings=["Descrição", "Valor", "Vencimento"],
-            data=[
-                {
-                    "descrição": r.Description,
-                    "valor": f"{r.TransactionValue / 100:.2f}".replace(".", ","),
-                    "vencimento": r.TransactionDate,
-                    "id": r.Id
-                }
-                for r in self.expenses_source.current_data
-            ],
         )
         self.expenses_list_annotation = Label(
-            style=Pack(font_size=9, margin=5, flex=1),
-            text="mostrando 2 de 2 itens"
+            style=Pack(font_size=9, margin=5, flex=1), text=""
         )
+        self.expenses_source.sort_ascending = False
+        self._refresh_displayed_data()
 
         self.first_interaction = Column(
             style=style.CENTERED_MAIN_CONTAINER,
@@ -91,6 +83,7 @@ class ExpensesSection(BaseSection):
                 self.plot_expense,
                 Row(style=Pack(align_items="center"), children=[
                     TextInput(placeholder="Pesquisa", style=Pack(margin=5, flex=1)),
+                    Button("Adic. ↓", style=style.SIMPLE_BUTTON, on_press=self.change_sorting),
                     Button(
                         text="⋮",
                         id="selected_expense_details_button",
@@ -125,7 +118,7 @@ class ExpensesSection(BaseSection):
                 ),
                 FormField(
                     id="expense_form_description_search",
-                    input_widget=TextInput(),
+                    input_widget=TextInput(on_change=self._on_form_update),
                     label="Descrição",
                     unstyled=True,
                 ),
@@ -141,7 +134,9 @@ class ExpensesSection(BaseSection):
                     children=[
                         FormField(
                             id="expense_form_value",
-                            input_widget=TextInput(placeholder="0,00"),
+                            input_widget=TextInput(
+                                placeholder="0,00", on_change=self._on_form_update
+                            ),
                             label="Valor",
                         ),
                         Button(
@@ -151,7 +146,9 @@ class ExpensesSection(BaseSection):
                         ),
                         Button(
                             "Inserir",
+                            id="expense_form_confirm",
                             style=style.SIMPLE_BUTTON,
+                            enabled=False,
                             on_press=self.add_expense,
                         ),
                     ],
@@ -181,24 +178,7 @@ class ExpensesSection(BaseSection):
         """Prompts to user to confirm the inserted data, in the positive case, writes
         to the database. Does nothing otherwise.
         """
-        type_field: Selection = self._app.widgets["expense_form_type_selection"]
-        type_map = {name: id for id, name in self.expense_type_source.current_data}
-        barcode_fmt = fmt.StringToBarcodeITF25(
-            user_input=self._app.widgets["expense_form_barcode"].input.value,
-            field_name="Código de Barra",
-        )
-        value_fmt = fmt.StringToCurrency(
-            user_input=self._app.widgets["expense_form_value"].input.value,
-            field_name="Valor",
-        )
-        expense = db.ExpenseEntry(
-            IdExpenseType=type_map[type_field.input.value],
-            TimeStamp=datetime.now(),
-            Description=self._app.widgets["expense_form_description_search"].input.value,
-            Barcode=barcode_fmt.value,
-            TransactionDate=self.date_input.value,
-            TransactionValue=value_fmt.value,
-        )
+        expense = self._get_expense_form_entry()
         # TODO: add confirmation dialog
         expense.write()
         self._refresh_displayed_data()
@@ -222,14 +202,44 @@ class ExpensesSection(BaseSection):
             self.SELECTED_EXPENSE.read(row_id=widget.selection.id)
             print(f"INFO: selected expense id: {self.SELECTED_EXPENSE.Id}")
 
+    def _get_expense_form_entry(self) -> db.ExpenseEntry:
+        type_field: Selection = self._app.widgets["expense_form_type_selection"]
+        type_map = {name: id for id, name in self.expense_type_source.current_data}
+        barcode_fmt = fmt.StringToBarcodeITF25(
+            user_input=self._app.widgets["expense_form_barcode"].input.value,
+            field_name="Código de Barra",
+        )
+        value_fmt = fmt.StringToCurrency(
+            user_input=self._app.widgets["expense_form_value"].input.value,
+            field_name="Valor",
+        )
+        return db.ExpenseEntry(
+            IdExpenseType=type_map[type_field.input.value],
+            TimeStamp=datetime.now(),
+            Description=self._app.widgets["expense_form_description_search"].input.value,
+            Barcode=barcode_fmt.value,
+            TransactionDate=self.date_input.value,
+            TransactionValue=value_fmt.value,
+        )
+
+    def _on_form_update(self, widget: TextInput):
+        """Actions performed when the user interacts with any input in the expense
+        form.
+        """
+        expense = self._get_expense_form_entry()
+        if expense.required_fields_are_filled():
+            self._app.widgets["expense_form_confirm"].enabled = True
+        else:
+            self._app.widgets["expense_form_confirm"].enabled = False
+
     def _refresh_displayed_data(self):
         """Refreshes data displayed in the summary section from both plot and table."""
         self.expenses_list.data=[
             {
                 "descrição": r.Description,
-                "valor": f"{r.TransactionValue / 100:.2f}".replace(".", ","),
+                "valor": f"{r.TransactionValue}".replace(".", ","),
                 "vencimento": r.TransactionDate,
-                "id": r.Id
+                "id": r.Id,
             }
             for r in self.expenses_source.current_data
         ]
@@ -251,6 +261,25 @@ class ExpensesSection(BaseSection):
             self.main_container.style = style.MAIN_CONTAINER
         new_container = self._get_main_container()
         self.main_container.add(new_container)
+
+    def change_sorting(self, widget: Button):
+        sort_options = ["Adic. ↓", "Adic. ↑", "Venc. ↓", "Venc. ↑"]
+        current_idx = sort_options.index(widget.text)
+        widget.text = sort_options[0 if current_idx==len(sort_options) - 1 else current_idx + 1]
+        match widget.text:
+            case "Venc. ↑":
+                self.expenses_source.sort_column = "TransactionDate"
+                self.expenses_source.sort_ascending = True
+            case "Venc. ↓":
+                self.expenses_source.sort_column = "TransactionDate"
+                self.expenses_source.sort_ascending = False
+            case "Adic. ↑":
+                self.expenses_source.sort_column = "Id"
+                self.expenses_source.sort_ascending = True
+            case _:
+                self.expenses_source.sort_column = "Id"
+                self.expenses_source.sort_ascending = False
+        self._refresh_displayed_data()
 
     def show_expense_details_dialog(self, widget: Button):
         """Show a dialog with details of the selected expense."""
