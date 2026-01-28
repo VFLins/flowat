@@ -36,6 +36,7 @@ class _DataSource:
                         selected_colnames
                     }."
                 )
+        self.SEARCH_COLNAMES = search_colnames
         if paginated:
             self._current_page = 1
             self._rows_per_page = config.PageSize.get()
@@ -59,9 +60,9 @@ class _DataSource:
     def nrows(self) -> int:
         """Number of rows that should be returned by `current_data`."""
         with Session(self.ENGINE) as ses:
-            select_stmt = self.searched_select_stmt(
+            select_stmt = self._get_searched_select_stmt(
                 stmt=self.SELECT_STMT,
-                search_text=search_text
+                search_text=self.search_text
             )
             nrows_stmt = select(func.count()).select_from(select_stmt.subquery())
             return ses.execute(nrows_stmt).scalar()
@@ -98,19 +99,22 @@ class _DataSource:
     def sort_column(self) -> str:
         """Column name of the column where the sorting should be performed."""
         colname = getattr(self, "_sort_column", None)
-        if (colname is None) or (colname not in self.column_names):
+        if colname in self.column_names:
             return colname
         return self.column_names[0]
 
     @sort_column.setter
     def sort_column(self, value: str):
-        self._sort_column = str(value)
+        if colname in self.column_names:
+            self._sort_column = str(value)
+        raise ValueError(
+            f"`sort_column` should be one of {self.column_names}, not {value}."
+        )
 
     @property
-    def column_names(self) -> str:
+    def column_names(self) -> tuple[str]:
         """Column names returned by this datasource's select statement."""
-        return self.SELECT_STMT.columns.keys()
-
+        return tuple(self.SELECT_STMT.columns.keys())
 
     @property
     def current_data(self) -> list:
@@ -172,8 +176,6 @@ class _DataSource:
           searched SELECT query.
         """
         stmt_copy = copy(stmt)
-        if not self.is_searchable() or (search_text == ""):
-            return stmt_copy
         keywords = re.findall(r"\w+", search_text)
         for kw in keywords:
             kw_in_cols = [
@@ -193,14 +195,9 @@ class _DataSource:
         stmt_copy = copy(stmt)
         self.sort_ascending = ascending
         self.sort_column = colname
-        colobj = stmt_copy.c.get(colname)
-        if colobj:
-            if ascending:
-                col_order = colobj.asc()
-            else:
-                col_order = colobj.desc()
-            return stmt_copy.order_by(col_order)
-        return stmt_copy
+        sortby = [col for col in stmt_copy.selected_columns if col.name == self.sort_column][0]
+        return stmt_copy.order_by(sortby.asc() if self.sort_ascending else sortby.desc())
+        # return stmt_copy.order_by(text(f"{colname} {'ASC' if ascending else 'DESC'}"))
 
     @property
     def current_page(self) -> int:
@@ -255,15 +252,17 @@ class RevenueTypeSource(_DataSource):
         )
 
 class ExpensesSource(_DataSource):
-    def __init(self, engine: Engine = DB_ENGINE):
+    def __init__(self, engine: Engine = DB_ENGINE):
         stmt = select(
             ExpenseEntry.Id,
-            RevenueType.Name.label("TransactionType"),
+            ExpenseType.Name.label("TransactionType"),
             ExpenseEntry.Description,
             ExpenseEntry.TransactionDate,
             ExpenseEntry.TransactionValue,
-        ).join(RevenueType)
+        ).join(ExpenseEntry, ExpenseEntry.IdExpenseType == ExpenseType.Id)
         super().__init__(
             select_stmt=stmt,
             paginated=True,
+            search_colnames=["TransactionType", "Description", "TransactionDate", "TransactionValue"],
+            engine=engine,
         )
