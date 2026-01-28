@@ -270,6 +270,15 @@ class ExpenseEntry(DeclaredTable):
     TransactionDate = Column("TransactionDate", Date)
     TransactionValue = Column("TransactionValue", CurrencyAmount)
 
+    def __repr__(self) -> str:
+        return (
+            f"{self.Description}\n"
+            f"Criado: {self.TimeStamp}\n"
+            f"Código de barras: {self.Barcode}\n"
+            f"Valor: R$ {self.TransactionValue/100:.2f}\n"
+            f"Vencimento: {self.TransactionDate}"
+        )
+
 
 class RevenueType(DeclaredTable):
     __tablename__ = "revenue_types"

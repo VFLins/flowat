@@ -14,7 +14,7 @@ from flowat import config
 if platform == "win32":
     FLOWAT_FILES_PATH = Path.home().joinpath("AppData", "Local", "Flowat")
     CONFIG_PATH = Path(FLOWAT_FILES_PATH, "configs")
-    LOG_PATH = Path(FLOAT_FILES_PATH, "logs")
+    LOG_PATH = Path(FLOWAT_FILES_PATH, "logs")
 else:
     FLOWAT_FILES_PATH = Path.home().joinpath(".local", "share", "Cashd")
     CONFIG_PATH = Path.home().joinpath(".config", "Cashd")

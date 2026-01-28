@@ -7,10 +7,12 @@ from toga.widgets.button import Button
 from toga.widgets.table import Table
 from toga.widgets.label import Label
 from toga.widgets.box import Box, Row, Column
+from toga.dialogs import InfoDialog
 from toga.window import Window
 from toga.style import Pack
 
 from datetime import date, datetime
+import asyncio
 
 from .base import BaseSection
 
@@ -22,6 +24,7 @@ from flowat.form.elem import FormField, Heading
 
 
 class ExpensesSection(BaseSection):
+    SELECTED_EXPENSE = db.ExpenseEntry()
     expenses_source = source.ExpensesSource()
     expense_type_source = source.ExpenseTypeSource()
 
@@ -38,6 +41,24 @@ class ExpensesSection(BaseSection):
         )
         self.date_input = HorizontalDateForm(
             id="expense_form_duedate", value=date.today()
+        )
+        self.expenses_list = Table(
+            style=Pack(flex=1, height=180),
+            on_select=self._on_select_expense,
+            headings=["Descrição", "Valor", "Vencimento"],
+            data=[
+                {
+                    "descrição": r.Description,
+                    "valor": f"{r.TransactionValue / 100:.2f}".replace(".", ","),
+                    "vencimento": r.TransactionDate,
+                    "id": r.Id
+                }
+                for r in self.expenses_source.current_data
+            ],
+        )
+        self.expenses_list_annotation = Label(
+            style=Pack(font_size=9, margin=5, flex=1),
+            text="mostrando 2 de 2 itens"
         )
 
         self.first_interaction = Column(
@@ -72,8 +93,10 @@ class ExpensesSection(BaseSection):
                     TextInput(placeholder="Pesquisa", style=Pack(margin=5, flex=1)),
                     Button(
                         text="⋮",
+                        id="selected_expense_details_button",
                         enabled=False,
                         style=style.SIMPLE_SQUARE_BUTTON,
+                        on_press=self.show_expense_details_dialog,
                     ),
                     Button(
                         text="+",
@@ -81,20 +104,9 @@ class ExpensesSection(BaseSection):
                         on_press=self.show_form
                     ),
                 ]),
-                Table(
-                    style=Pack(flex=1, height=180),
-                    headings=["Descrição", "Valor", "Vencimento"],
-                    data=[
-                        (
-                            r.Description,
-                            f"{r.TransactionValue / 100:.2f}".replace(".", ","),
-                            r.TransactionDate
-                        )
-                        for r in self.expenses_source.current_data
-                    ],
-                ),
+                self.expenses_list,
                 Row(style=Pack(align_items="center"), children=[
-                    Label(style=Pack(font_size=9, margin=5, flex=1), text="mostrando 2 de 2 itens"),
+                    self.expenses_list_annotation,
                     Button("anterior", style=Pack(height=28, font_size=9, margin=5)),
                     Button("próximo", style=Pack(height=28, font_size=9, margin=5)),
                 ])
@@ -189,6 +201,7 @@ class ExpensesSection(BaseSection):
         )
         # TODO: add confirmation dialog
         expense.write()
+        self._refresh_displayed_data()
         self.show_main_content(widget=widget)
 
     def show_form(self, widget: Button):
@@ -198,6 +211,33 @@ class ExpensesSection(BaseSection):
         self.main_container.clear()
         self.main_container.style = style.MAIN_CONTAINER
         self.main_container.add(self.expense_form)
+
+    def _on_select_expense(self, widget: Table):
+        """Actions performed when an expense is selected or `widget` loses selection."""
+        if widget.selection is None:
+            self._app.widgets["selected_expense_details_button"].enabled = False
+            self.SELECTED_EXPENSE.clear()
+        else:
+            self._app.widgets["selected_expense_details_button"].enabled = True
+            self.SELECTED_EXPENSE.read(row_id=widget.selection.id)
+            print(f"INFO: selected expense id: {self.SELECTED_EXPENSE.Id}")
+
+    def _refresh_displayed_data(self):
+        """Refreshes data displayed in the summary section from both plot and table."""
+        self.expenses_list.data=[
+            {
+                "descrição": r.Description,
+                "valor": f"{r.TransactionValue / 100:.2f}".replace(".", ","),
+                "vencimento": r.TransactionDate,
+                "id": r.Id
+            }
+            for r in self.expenses_source.current_data
+        ]
+        self.expenses_list_annotation.text = (
+            f"{self.expenses_source.nrows} itens, "
+            f"mostrando {self.expenses_source.min_idx + 1} "
+            f"até {self.expenses_source.max_idx}"
+        )
 
     def show_main_content(self, widget: Button):
         """Removes currently displayed elments and show a form where the user can
@@ -211,6 +251,11 @@ class ExpensesSection(BaseSection):
             self.main_container.style = style.MAIN_CONTAINER
         new_container = self._get_main_container()
         self.main_container.add(new_container)
+
+    def show_expense_details_dialog(self, widget: Button):
+        """Show a dialog with details of the selected expense."""
+        info_dialog = InfoDialog("Informações do gasto", str(self.SELECTED_EXPENSE))
+        asyncio.create_task(self._app.main_window.dialog(info_dialog))
 
     def show_expense_type_dialog(self, widget: Button):
         """Show a dialog where the user can manage expense type options."""

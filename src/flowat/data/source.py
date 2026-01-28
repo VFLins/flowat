@@ -233,7 +233,7 @@ class _DataSource:
         """Updates `self.SELECT_STMT` to reflect the date frequency requested. Does
         nothing if the data source can't accept date frequency updates.
         """
-        pass
+        raise NotImplementedError()
 
 
 class ExpenseTypeSource(_DataSource):
