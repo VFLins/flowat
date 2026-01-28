@@ -31,11 +31,9 @@ class _DataSource:
         selected_colnames = select_stmt.selected_columns.keys()
         for col in search_colnames:
             if col not in selected_colnames:
-                raise ValueError(
-                    f"Expected all `search_colnames` to be present in {
+                raise ValueError(f"Expected all `search_colnames` to be present in {
                         selected_colnames
-                    }."
-                )
+                    }.")
         self.SEARCH_COLNAMES = search_colnames
         if paginated:
             self._current_page = 1
@@ -61,8 +59,7 @@ class _DataSource:
         """Number of rows that should be returned by `current_data`."""
         with Session(self.ENGINE) as ses:
             select_stmt = self._get_searched_select_stmt(
-                stmt=self.SELECT_STMT,
-                search_text=self.search_text
+                stmt=self.SELECT_STMT, search_text=self.search_text
             )
             nrows_stmt = select(func.count()).select_from(select_stmt.subquery())
             return ses.execute(nrows_stmt).scalar()
@@ -122,8 +119,7 @@ class _DataSource:
         `current_data`.
         """
         stmt = self._get_searched_select_stmt(
-            stmt=self.SELECT_STMT,
-            search_text=self.search_text
+            stmt=self.SELECT_STMT, search_text=self.search_text
         )
         stmt = self._get_sorted_select_stmt(
             stmt=stmt,
@@ -185,7 +181,9 @@ class _DataSource:
             stmt_copy = stmt_copy.where(or_(*kw_in_cols))
         return stmt_copy
 
-    def _get_sorted_select_stmt(self, stmt: Select, colname: str, ascending: bool = True) -> Select:
+    def _get_sorted_select_stmt(
+        self, stmt: Select, colname: str, ascending: bool = True
+    ) -> Select:
         """Adds a sort logic to `stmt` and returns it. If this source is not sortable
         or colname cannot be found, returns `stmt` with no modifications.
 
@@ -195,9 +193,12 @@ class _DataSource:
         stmt_copy = copy(stmt)
         self.sort_ascending = ascending
         self.sort_column = colname
-        sortby = [col for col in stmt_copy.selected_columns if col.name == self.sort_column][0]
-        return stmt_copy.order_by(sortby.asc() if self.sort_ascending else sortby.desc())
-        # return stmt_copy.order_by(text(f"{colname} {'ASC' if ascending else 'DESC'}"))
+        sortby = [
+            col for col in stmt_copy.selected_columns if col.name == self.sort_column
+        ][0]
+        return stmt_copy.order_by(
+            sortby.asc() if self.sort_ascending else sortby.desc()
+        )
 
     @property
     def current_page(self) -> int:
@@ -239,7 +240,7 @@ class ExpenseTypeSource(_DataSource):
         super().__init__(
             select_stmt=select(ExpenseType.Id, ExpenseType.Name),
             paginated=False,
-            engine=engine
+            engine=engine,
         )
 
 
@@ -248,8 +249,9 @@ class RevenueTypeSource(_DataSource):
         super().__init__(
             select_stmt=select(RevenueType.Id, RevenueType.Name),
             paginated=False,
-            engine=engine
+            engine=engine,
         )
+
 
 class ExpensesSource(_DataSource):
     def __init__(self, engine: Engine = DB_ENGINE):
@@ -263,6 +265,11 @@ class ExpensesSource(_DataSource):
         super().__init__(
             select_stmt=stmt,
             paginated=True,
-            search_colnames=["TransactionType", "Description", "TransactionDate", "TransactionValue"],
+            search_colnames=[
+                "TransactionType",
+                "Description",
+                "TransactionDate",
+                "TransactionValue",
+            ],
             engine=engine,
         )
