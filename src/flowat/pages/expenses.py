@@ -29,7 +29,7 @@ class ExpensesSection(BaseSection):
         super().__init__(app=app)
         self._ensure_expense_types()
         self.plot_expense = WebView(
-            style=Pack(width=style.CONTENT_WIDTH, height=220),
+            style=Pack(width=style.CONTENT_WIDTH, height=160),
             content=colplot(
                 x=["Dez. 2025", "Jan. 2026", "Fev. 2026", "Mar. 2026", "Abr. 2026"],
                 y=[24133, 23122, 12011, 954, 97],
@@ -68,12 +68,21 @@ class ExpensesSection(BaseSection):
             style=style.MAIN_CONTAINER,
             children=[
                 self.plot_expense,
-                Button(
-                    icon=icon.CIRCLE_PLUS,
-                    style=style.SIMPLE_BUTTON,
-                    on_press=self.show_form
-                ),
+                Row(style=Pack(align_items="center"), children=[
+                    TextInput(placeholder="Pesquisa", style=Pack(margin=5, flex=1)),
+                    Button(
+                        text="⋮",
+                        enabled=False,
+                        style=style.SIMPLE_SQUARE_BUTTON,
+                    ),
+                    Button(
+                        text="+",
+                        style=style.SIMPLE_SQUARE_BUTTON,
+                        on_press=self.show_form
+                    ),
+                ]),
                 Table(
+                    style=Pack(flex=1, height=180),
                     headings=["Descrição", "Valor", "Vencimento"],
                     data=[
                         (
@@ -83,7 +92,12 @@ class ExpensesSection(BaseSection):
                         )
                         for r in self.expenses_source.current_data
                     ],
-                )
+                ),
+                Row(style=Pack(align_items="center"), children=[
+                    Label(style=Pack(font_size=9, margin=5, flex=1), text="mostrando 2 de 2 itens"),
+                    Button("anterior", style=Pack(height=28, font_size=9, margin=5)),
+                    Button("próximo", style=Pack(height=28, font_size=9, margin=5)),
+                ])
             ]
         )
         self.expense_form = Column(

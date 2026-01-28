@@ -29,7 +29,7 @@ def _set_layout(figure: Figure, y: list[float]) -> Figure:
             "fixedrange": True,
         },
         margin={"l": 0, "r": 0, "t": 0, "b": 0},
-        hovermode="closest",
+        hovermode="x unified",
         barcornerradius=6,
     )
 
