@@ -102,11 +102,12 @@ class _DataSource:
 
     @sort_column.setter
     def sort_column(self, value: str):
-        if colname in self.column_names:
+        if value in self.column_names:
             self._sort_column = str(value)
-        raise ValueError(
-            f"`sort_column` should be one of {self.column_names}, not {value}."
-        )
+        else:
+            raise ValueError(
+                f"`sort_column` should be one of {self.column_names}, not '{value}'."
+            )
 
     @property
     def column_names(self) -> tuple[str]:

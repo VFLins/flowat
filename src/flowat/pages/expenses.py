@@ -22,6 +22,7 @@ from flowat.form.elem import FormField, Heading
 
 
 class ExpensesSection(BaseSection):
+    expenses_source = source.ExpensesSource()
     expense_type_source = source.ExpenseTypeSource()
 
     def __init__(self, app):
@@ -73,7 +74,15 @@ class ExpensesSection(BaseSection):
                     on_press=self.show_form
                 ),
                 Table(
-                    headings=["Descrição", "Valor", "Vencimento"]
+                    headings=["Descrição", "Valor", "Vencimento"],
+                    data=[
+                        (
+                            r.Description,
+                            f"{r.TransactionValue / 100:.2f}".replace(".", ","),
+                            r.TransactionDate
+                        )
+                        for r in self.expenses_source.current_data
+                    ],
                 )
             ]
         )
