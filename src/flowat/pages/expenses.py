@@ -19,6 +19,7 @@ from .base import BaseSection
 from flowat.const import style, icon
 from flowat.data import db, source, fmt
 from flowat.plot.bar import colplot
+from flowat.plot.base import month_labels
 from flowat.form.date import HorizontalDateForm
 from flowat.form.elem import FormField, Heading
 
@@ -34,8 +35,8 @@ class ExpensesSection(BaseSection):
         self.plot_expense = WebView(
             style=Pack(width=style.CONTENT_WIDTH, height=160),
             content=colplot(
-                x=["Dez. 2025", "Jan. 2026", "Fev. 2026", "Mar. 2026", "Abr. 2026"],
-                y=[24133, 23122, 12011, 954, 97],
+                x=month_labels(date.today(), 5),
+                y=[24133, 20122, 12011, 8954, 1233],
             ),
             on_webview_load=self.reload_plot,
         )
@@ -49,6 +50,12 @@ class ExpensesSection(BaseSection):
         )
         self.expenses_list_annotation = Label(
             style=Pack(font_size=9, margin=5, flex=1), text=""
+        )
+        self.expense_details_button = Button(
+            text="ⓘ",
+            enabled=False,
+            style=style.SIMPLE_SQUARE_BUTTON,
+            on_press=self.show_expense_details_dialog,
         )
         self.expenses_source.sort_ascending = False
         self._refresh_displayed_data()
@@ -89,13 +96,7 @@ class ExpensesSection(BaseSection):
                         on_change=self._on_search_update,
                     ),
                     Button("Adic. ↓", style=style.SIMPLE_BUTTON, on_press=self.change_sorting),
-                    Button(
-                        text="ⓘ",
-                        id="selected_expense_details_button",
-                        enabled=False,
-                        style=style.SIMPLE_SQUARE_BUTTON,
-                        on_press=self.show_expense_details_dialog,
-                    ),
+                    self.expense_details_button,
                     Button(
                         text="+",
                         style=style.SIMPLE_SQUARE_BUTTON,
@@ -200,10 +201,10 @@ class ExpensesSection(BaseSection):
     def _on_select_expense(self, widget: Table):
         """Actions performed when an expense is selected or `widget` loses selection."""
         if widget.selection is None:
-            self._app.widgets["selected_expense_details_button"].enabled = False
+            self.expense_details_button.enabled = False
             self.SELECTED_EXPENSE.clear()
         else:
-            self._app.widgets["selected_expense_details_button"].enabled = True
+            self.expense_details_button.enabled = True
             self.SELECTED_EXPENSE.read(row_id=widget.selection.id)
             print(f"INFO: selected expense id: {self.SELECTED_EXPENSE.Id}")
 

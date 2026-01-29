@@ -1,5 +1,5 @@
 from typing import Literal, Iterable
-from sqlalchemy import Engine, Select, func, select, or_, text, cast, String, Numeric
+from sqlalchemy import Engine, Select, func, select, or_, text, cast, String, Numeric, Float
 from sqlalchemy.orm import Session
 from copy import copy
 import re
@@ -291,5 +291,19 @@ class ExpensesSource(_DataSource):
                 "Description",
                 "TransactionValue",
             ],
+            engine=engine,
+        )
+
+
+class AggregatedExpensesSource(_DataSource):
+    def __init__(self, engine: Engine = DB_ENGINE):
+        date_col = func.strftime("%Y-%m", ExpenseEntry.TransactionDate).label("Date")
+        stmt = select(
+            date_col,
+            (cast(ExpenseEntry.TransactionValue, Float)/ 100).label("TransactionValue"),
+        ).group_by(date_col)
+        super().__init__(
+            select_stmt=stmt,
+            paginated=True,
             engine=engine,
         )
