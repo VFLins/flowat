@@ -100,8 +100,8 @@ class ExpensesSection(BaseSection):
                 self.expenses_list,
                 Row(style=Pack(align_items="center"), children=[
                     self.expenses_list_annotation,
-                    Button("anterior", style=Pack(height=28, font_size=9, margin=5)),
-                    Button("próximo", style=Pack(height=28, font_size=9, margin=5)),
+                    Button("anterior", style=style.SIMPLE_SMALL_BUTTON),
+                    Button("próximo", style=style.SIMPLE_SMALL_BUTTON),
                 ])
             ]
         )
@@ -234,6 +234,7 @@ class ExpensesSection(BaseSection):
 
     def _refresh_displayed_data(self):
         """Refreshes data displayed in the summary section from both plot and table."""
+        self.expenses_list.data = None # winforms needs to clear before filling
         self.expenses_list.data=[
             {
                 "descrição": r.Description,

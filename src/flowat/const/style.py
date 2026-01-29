@@ -27,8 +27,14 @@ HEADING2 = Pack(
 # buttons
 BIG_BUTTON = Pack(width=220, margin=5)
 BIG_SQUARE_BUTTON = Pack(width=52, height=52, margin=5)
-SIMPLE_BUTTON = Pack(height=36, width=90, margin=(0, 5))
-SIMPLE_SQUARE_BUTTON = Pack(width=36, height=36, margin=(0, 5), font_weight="bold")
+if platform == "win32":
+    SIMPLE_BUTTON = Pack(width=90, margin=(0, 2))
+    SIMPLE_SMALL_BUTTON = Pack(height=24, font_size=7, margin=2)
+    SIMPLE_SQUARE_BUTTON = Pack(width=36, margin=(0, 2))
+else:
+    SIMPLE_BUTTON = Pack(height=36, width=90, margin=(0, 5))
+    SIMPLE_SMALL_BUTTON = Pack(height=28, font_size=9, margin=5)
+    SIMPLE_SQUARE_BUTTON = Pack(width=36, height=36, margin=(0, 5), font_weight="bold")
 
 
 def user_input(widget_type: Type[Widget]) -> Pack:
