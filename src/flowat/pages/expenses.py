@@ -82,10 +82,15 @@ class ExpensesSection(BaseSection):
             children=[
                 self.plot_expense,
                 Row(style=Pack(align_items="center"), children=[
-                    TextInput(placeholder="Pesquisa", style=Pack(margin=5, flex=1)),
+                    TextInput(
+                        id="expense_summary_search",
+                        placeholder="Pesquisa",
+                        style=Pack(margin=5, flex=1),
+                        on_change=self._on_search_update,
+                    ),
                     Button("Adic. ↓", style=style.SIMPLE_BUTTON, on_press=self.change_sorting),
                     Button(
-                        text="⋮",
+                        text="ⓘ",
                         id="selected_expense_details_button",
                         enabled=False,
                         style=style.SIMPLE_SQUARE_BUTTON,
@@ -232,13 +237,22 @@ class ExpensesSection(BaseSection):
         else:
             self._app.widgets["expense_form_confirm"].enabled = False
 
+    def _on_search_update(self, widget: TextInput):
+        """Actions performed when the user interacts with the search bar in the expese
+        summary.
+        """
+        search_widget = self._app.widgets["expense_summary_search"]
+        print(search_widget.value)
+        self.expenses_source.search_text = search_widget.value
+        self._refresh_displayed_data()
+
     def _refresh_displayed_data(self):
         """Refreshes data displayed in the summary section from both plot and table."""
         self.expenses_list.data = None # winforms needs to clear before filling
         self.expenses_list.data=[
             {
                 "descrição": r.Description,
-                "valor": f"{r.TransactionValue}".replace(".", ","),
+                "valor": r.TransactionValue,
                 "vencimento": r.TransactionDate,
                 "id": r.Id,
             }

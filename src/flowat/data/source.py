@@ -1,11 +1,35 @@
 from typing import Literal, Iterable
-from sqlalchemy import Engine, Select, func, select, or_, text
+from sqlalchemy import Engine, Select, func, select, or_, text, cast, String, Numeric
 from sqlalchemy.orm import Session
 from copy import copy
 import re
 
 from .db import DB_ENGINE, ExpenseType, RevenueType, ExpenseEntry, RevenueEntry
 from flowat import config
+
+
+def query_currency(
+    value_query,
+    label: str = "Value",
+    decimal_sep: str = ",",
+    convert_decimal: bool = True,
+):
+    """Converts numeric integer column query into a formatted currency text column. The
+    decimal places are always truncated to 2.
+
+    :param value_query: Input compatible with `sqlalchemy.select` that evaluates to an
+      numeric integer column.
+    :param label: Column label, equivalent to 'SELECT table.column_name AS Value ...',
+      where `label='Value'`.
+    :param decimal_sep: Decimal separator for the formatted currency data.
+    :param convert_decimal: Should the column be divided by 100 to create decimal places?
+    """
+    div = 100 if convert_decimal else 1
+    return func.replace(
+        func.printf("%.2f", cast(value_query, Numeric) / div),
+        text("'.'"),
+        text(f"'{decimal_sep}'"),
+    ).label(label)
 
 
 class _DataSource:
@@ -116,8 +140,8 @@ class _DataSource:
 
     @property
     def current_data(self) -> list:
-        """Assigns the data based on the current metadata values to
-        `current_data`.
+        """Uses current metadata to apply search and sort to this source's select
+        statement. Returns the query output as a list of rows.
         """
         stmt = self._get_searched_select_stmt(
             stmt=self.SELECT_STMT, search_text=self.search_text
@@ -158,11 +182,7 @@ class _DataSource:
             return False
 
     def is_searchable(self) -> bool:
-        try:
-            _ = self._search_text
-            return True
-        except AttributeError:
-            return False
+        return bool(len(self.SEARCH_COLNAMES))
 
     def _get_searched_select_stmt(self, stmt: Select, search_text: str = "") -> Select:
         """If this is a searchable data source, adds a search logic to `stmt` and
@@ -176,7 +196,7 @@ class _DataSource:
         keywords = re.findall(r"\w+", search_text)
         for kw in keywords:
             kw_in_cols = [
-                self.SELECT_STMT.selected_columns[col].ilike(f"%{kw}%")
+                cast(self.SELECT_STMT.selected_columns[col], String).ilike(f"%{kw}%")
                 for col in self.SEARCH_COLNAMES
             ]
             stmt_copy = stmt_copy.where(or_(*kw_in_cols))
@@ -261,7 +281,7 @@ class ExpensesSource(_DataSource):
             ExpenseType.Name.label("TransactionType"),
             ExpenseEntry.Description,
             ExpenseEntry.TransactionDate,
-            ExpenseEntry.TransactionValue,
+            query_currency(ExpenseEntry.TransactionValue, label="TransactionValue"),
         ).join(ExpenseEntry, ExpenseEntry.IdExpenseType == ExpenseType.Id)
         super().__init__(
             select_stmt=stmt,
@@ -269,7 +289,6 @@ class ExpensesSource(_DataSource):
             search_colnames=[
                 "TransactionType",
                 "Description",
-                "TransactionDate",
                 "TransactionValue",
             ],
             engine=engine,

@@ -76,7 +76,6 @@ class _Config:
     def get(cls):
         """Get current value of this config, or the default value if not defined."""
         interactor = cls()
-        print(interactor)
         return interactor.__get()
 
     @classmethod
