@@ -300,7 +300,7 @@ class AggregatedExpensesSource(_DataSource):
         date_col = func.strftime("%Y-%m", ExpenseEntry.TransactionDate).label("Date")
         stmt = select(
             date_col,
-            (cast(ExpenseEntry.TransactionValue, Float)/ 100).label("TransactionValue"),
+            func.sum(cast(ExpenseEntry.TransactionValue, Float)/ 100).label("TransactionValue"),
         ).group_by(date_col)
         super().__init__(
             select_stmt=stmt,
