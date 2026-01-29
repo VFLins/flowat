@@ -27,6 +27,7 @@ from flowat.form.elem import FormField, Heading
 class ExpensesSection(BaseSection):
     SELECTED_EXPENSE = db.ExpenseEntry()
     expenses_source = source.ExpensesSource()
+    agg_expenses_source = source.AggregatedExpensesSource()
     expense_type_source = source.ExpenseTypeSource()
 
     def __init__(self, app):
@@ -34,10 +35,6 @@ class ExpensesSection(BaseSection):
         self._ensure_expense_types()
         self.plot_expense = WebView(
             style=Pack(width=style.CONTENT_WIDTH, height=160),
-            content=colplot(
-                x=month_labels(date.today(), 5),
-                y=[24133, 20122, 12011, 8954, 1233],
-            ),
             on_webview_load=self.reload_plot,
         )
         self.date_input = HorizontalDateForm(
@@ -175,10 +172,9 @@ class ExpensesSection(BaseSection):
         widget._n_loads = n_loads + 1
         if widget._n_loads % 2 == 1:
             return
-        widget.content = colplot(
-            x=["Dez. 2025", "Jan. 2026", "Fev. 2026", "Mar. 2026", "Abr. 2026"],
-            y=[24133, 23122, 12011, 954, 297],
-        )
+        dates, sums = zip(*self.agg_expenses_source.current_data)
+        print(f"INFO: Loading plot data {dates=}, {sums=}")
+        widget.content = colplot(x=dates, y=sums)
 
     def add_expense(self, widget: Button):
         """Prompts to user to confirm the inserted data, in the positive case, writes
@@ -264,6 +260,9 @@ class ExpensesSection(BaseSection):
             f"mostrando {self.expenses_source.min_idx + 1} "
             f"até {self.expenses_source.max_idx}"
         )
+        dates, sums = zip(*self.agg_expenses_source.current_data)
+        print(f"INFO: Loading plot data {dates=}, {sums=}")
+        self.plot_expense.content = colplot(x=dates, y=sums)
 
     def show_main_content(self, widget: Button):
         """Removes currently displayed elments and show a form where the user can
