@@ -1,6 +1,7 @@
 from typing import Literal, Iterable
-from sqlalchemy import Engine, Select, func, select, or_, text, cast, String, Numeric, Float
+from sqlalchemy import Engine, Select, func, select, or_, text, cast, extract, String, Numeric, Float
 from sqlalchemy.orm import Session
+from datetime import date
 from copy import copy
 import re
 
@@ -297,10 +298,14 @@ class ExpensesSource(_DataSource):
 
 class AggregatedExpensesSource(_DataSource):
     def __init__(self, engine: Engine = DB_ENGINE):
+        today = date.today()
         date_col = func.strftime("%Y-%m", ExpenseEntry.TransactionDate).label("Date")
         stmt = select(
             date_col,
             func.sum(cast(ExpenseEntry.TransactionValue, Float)/ 100).label("TransactionValue"),
+        ).where(
+            extract("year", ExpenseEntry.TransactionDate) >= today.year,
+            extract("month", ExpenseEntry.TransactionDate) >= today.month
         ).group_by(date_col)
         super().__init__(
             select_stmt=stmt,
