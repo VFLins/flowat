@@ -34,7 +34,7 @@ class ExpensesSection(BaseSection):
         super().__init__(app=app)
         self._ensure_expense_types()
         self.plot_expense = WebView(
-            style=Pack(width=style.CONTENT_WIDTH, height=160),
+            style=Pack(width=515, height=160),
             on_webview_load=self.reload_plot,
         )
         self.date_input = HorizontalDateForm(
@@ -43,7 +43,7 @@ class ExpensesSection(BaseSection):
         self.expenses_list = Table(
             style=Pack(flex=1),
             on_select=self._on_select_expense,
-            headings=["Descrição", "Valor", "Vencimento"],
+            headings=["Descrição", "Tipo", "Valor", "Vencimento"],
         )
         self.expenses_list_annotation = Label(
             style=Pack(font_size=9, margin=5, flex=1), text=""
@@ -82,7 +82,7 @@ class ExpensesSection(BaseSection):
             ],
         )
         self.expense_summary = Column(
-            style=style.MAIN_CONTAINER,
+            style=Pack(width=515),
             children=[
                 self.plot_expense,
                 Row(style=Pack(align_items="center"), children=[
@@ -109,7 +109,7 @@ class ExpensesSection(BaseSection):
             ]
         )
         self.expense_form = Column(
-            style=style.MAIN_CONTAINER,
+            style=style.FORM_CONTAINER,
             children=[
                 FormField(
                     id="expense_form_type_selection",
@@ -248,6 +248,7 @@ class ExpensesSection(BaseSection):
         self.expenses_list.data = None # winforms needs to clear before filling
         self.expenses_list.data=[
             {
+                "tipo": r.TransactionType,
                 "descrição": r.Description,
                 "valor": r.TransactionValue,
                 "vencimento": r.TransactionDate,
@@ -269,8 +270,7 @@ class ExpensesSection(BaseSection):
         add a new expense.
         """
         self.main_container.clear()
-        expense_data = db.ExpenseEntry()
-        if expense_data.table_is_empty():
+        if db.ExpenseEntry().table_is_empty():
             self.main_container.style = style.CENTERED_MAIN_CONTAINER
         else:
             self.main_container.style = style.MAIN_CONTAINER

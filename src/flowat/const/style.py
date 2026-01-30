@@ -8,7 +8,8 @@ from toga.widgets.textinput import TextInput
 from toga.widgets.selection import Selection
 from toga.widgets.numberinput import NumberInput
 
-CONTENT_WIDTH = 395
+CONTENT_WIDTH = 510
+FORM_WIDTH = 395
 
 # containers
 CENTERED_MAIN_CONTAINER = Pack(
@@ -16,6 +17,9 @@ CENTERED_MAIN_CONTAINER = Pack(
 )
 MAIN_CONTAINER = Pack(
     align_items="center", flex=1, direction="column", width=CONTENT_WIDTH, margin=(0, 0, 20, 0)
+)
+FORM_CONTAINER = Pack(
+        align_items="center", flex=1, direction="column", width=FORM_WIDTH, margin=(0, 0, 20, 0)
 )
 
 # labels
