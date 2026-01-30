@@ -35,7 +35,7 @@ class ExpensesSection(BaseSection):
         self._ensure_expense_types()
         self.plot_expense = WebView(
             style=Pack(width=515, height=160),
-            on_webview_load=self.reload_plot,
+            on_webview_load=self._on_reload_plot,
         )
         self.date_input = HorizontalDateForm(
             id="expense_form_duedate", value=date.today()
@@ -172,7 +172,7 @@ class ExpensesSection(BaseSection):
             children=[self.main_container],
         )
 
-    def reload_plot(self, widget: WebView):
+    def _on_reload_plot(self, widget: WebView):
         n_loads = getattr(widget, "_n_loads", 0)
         widget._n_loads = n_loads + 1
         if widget._n_loads % 2 == 1:
@@ -213,6 +213,16 @@ class ExpensesSection(BaseSection):
         self.main_container.clear()
         self.main_container.style = style.MAIN_CONTAINER
         self.main_container.add(self.expense_form)
+
+    def show_main_content(self, widget: Button):
+        """Removes currently displayed elments and show a summary of expenses."""
+        self.main_container.clear()
+        if db.ExpenseEntry().table_is_empty():
+            self.main_container.style = style.CENTERED_MAIN_CONTAINER
+        else:
+            self.main_container.style = style.MAIN_CONTAINER
+        new_container = self._get_main_container()
+        self.main_container.add(new_container)
 
     def _on_select_expense(self, widget: Table):
         """Actions performed when an expense is selected or `widget` loses selection."""
@@ -259,7 +269,6 @@ class ExpensesSection(BaseSection):
         summary.
         """
         search_widget = self._app.widgets["expense_summary_search"]
-        print(search_widget.value)
         self.expenses_source.search_text = search_widget.value
         self._refresh_displayed_data()
 
@@ -284,18 +293,6 @@ class ExpensesSection(BaseSection):
         dates, sums = zip(*self.agg_expenses_source.current_data)
         print(f"INFO: Loading plot data {dates=}, {sums=}")
         self.plot_expense.content = colplot(x=dates, y=sums)
-
-    def show_main_content(self, widget: Button):
-        """Removes currently displayed elments and show a form where the user can
-        add a new expense.
-        """
-        self.main_container.clear()
-        if db.ExpenseEntry().table_is_empty():
-            self.main_container.style = style.CENTERED_MAIN_CONTAINER
-        else:
-            self.main_container.style = style.MAIN_CONTAINER
-        new_container = self._get_main_container()
-        self.main_container.add(new_container)
 
     def change_sorting(self, widget: Button):
         sort_options = ["Adic. ↓", "Adic. ↑", "Venc. ↓", "Venc. ↑"]

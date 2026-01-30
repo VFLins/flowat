@@ -324,3 +324,42 @@ class AggregatedExpensesSource(_DataSource):
             .group_by(date_col)
         )
         super().__init__(select_stmt=stmt, paginated=True, engine=engine)
+
+
+class AggregatedRevenuesSource(_DataSource):
+    def __init__(self, engine: Engine = DB_ENGINE):
+        today = date.today()
+        date_col = func.strftime("%Y-%m", RevenueEntry.TransactionDate).label("Date")
+        sums_col = func.sum(cast(RevenueEntry.TransactionValue, Float) / 100).label(
+            "TransactionValue"
+        )
+        stmt = (
+            select(date_col, sums_col)
+            .where(
+                extract("year", RevenueEntry.TransactionDate) >= today.year,
+                extract("month", RevenueEntry.TransactionDate) >= today.month,
+            )
+            .group_by(date_col)
+        )
+        super().__init__(select_stmt=stmt, paginated=True, engine=engine)
+
+
+class RevenuesSource(_DataSource):
+    def __init__(self, engine: Engine = DB_ENGINE):
+        stmt = select(
+            RevenueEntry.Id,
+            RevenueType.Name.label("TransactionType"),
+            RevenueEntry.Description,
+            RevenueEntry.TransactionDate,
+            query_currency(RevenueEntry.TransactionValue, label="TransactionValue"),
+        ).join(RevenueEntry, RevenueEntry.IdRevenueType == RevenueType.Id)
+        super().__init__(
+            select_stmt=stmt,
+            paginated=True,
+            search_colnames=[
+                "TransactionType",
+                "Description",
+                "TransactionValue",
+            ],
+            engine=engine,
+        )
