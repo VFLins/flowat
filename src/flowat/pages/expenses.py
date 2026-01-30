@@ -7,7 +7,7 @@ from toga.widgets.button import Button
 from toga.widgets.table import Table
 from toga.widgets.label import Label
 from toga.widgets.box import Box, Row, Column
-from toga.dialogs import InfoDialog
+from toga.dialogs import InfoDialog, ConfirmDialog
 from toga.window import Window
 from toga.style import Pack
 
@@ -93,11 +93,16 @@ class ExpensesSection(BaseSection):
                         on_change=self._on_search_update,
                     ),
                     Button("Adic. ↓", style=style.SIMPLE_BUTTON, on_press=self.change_sorting),
+                    Button(
+                        text="🗑",
+                        style=style.SIMPLE_SQUARE_BUTTON,
+                        on_press=self.rm_expense,
+                    ),
                     self.expense_details_button,
                     Button(
                         text="+",
                         style=style.SIMPLE_SQUARE_BUTTON,
-                        on_press=self.show_form
+                        on_press=self.show_form,
                     ),
                 ]),
                 self.expenses_list,
@@ -181,11 +186,25 @@ class ExpensesSection(BaseSection):
         to the database. Does nothing otherwise.
         """
         expense = self._get_expense_form_entry()
-        # TODO: add confirmation dialog
+        # TODO: Add confirmation dialog. Should check if a similar transaction was
+        # added before (type, value and date), and warn the user.
         expense.write()
         self._clear_expense_form()
         self._refresh_displayed_data()
         self.show_main_content(widget=widget)
+
+    def rm_expense(self, widget: Button):
+        """Prompts the user to confirm removal of the selected expense, in the positive
+        case, removes transaction from the database. Does nothing otherwise.
+        """
+        confirm_dialog = ConfirmDialog("Excluir esta transação?", str(self.SELECTED_EXPENSE))
+        task = asyncio.create_task(self._app.main_window.dialog(confirm_dialog))
+        task.add_done_callback(self.rm_expense_response)
+
+    def rm_expense_response(self, task: asyncio.Task):
+            if task.result():
+                self.SELECTED_EXPENSE.delete()
+                self._refresh_displayed_data()
 
     def show_form(self, widget: Button):
         """Removes currently displayed elments and show a form where the user can
