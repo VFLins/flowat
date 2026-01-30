@@ -149,7 +149,7 @@ class _DataSource:
     @property
     def column_names(self) -> tuple[str]:
         """Column names returned by this datasource's select statement."""
-        return tuple(self.SELECT_STMT.columns.keys())
+        return tuple(self.SELECT_STMT.selected_columns.keys())
 
     @property
     def current_data(self) -> list:
