@@ -6,9 +6,10 @@ from toga.widgets.button import Button
 from toga.widgets.table import Table
 from toga.widgets.label import Label
 from toga.widgets.box import Box, Column, Row
+from toga.dialogs import InfoDialog, ConfirmDialog
 from toga.style import Pack
 
-from datetime import date
+from datetime import date, datetime
 import asyncio
 
 from .base import BaseSection
@@ -104,7 +105,7 @@ class RevenuesSection(BaseSection):
             children=[
                 FormField(
                     id="revenue_form_type",
-                    input_widget=Selection(items=self.revenue_type_source.current_data),
+                    input_widget=Selection(items=[r.Name for r in self.revenue_type_source.current_data]),
                     label="Tipo",
                     unstyled=True,
                 ),
@@ -198,6 +199,7 @@ class RevenuesSection(BaseSection):
         if task.result():
             self.SELECTED_REVENUE.delete()
             self._refresh_displayed_data()
+            self.show_main_content()
 
     def change_sorting(self, widget: Button):
         sort_options = ["Adic. ↓", "Adic. ↑", "Venc. ↓", "Venc. ↑"]

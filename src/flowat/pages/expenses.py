@@ -204,6 +204,7 @@ class ExpensesSection(BaseSection):
             if task.result():
                 self.SELECTED_EXPENSE.delete()
                 self._refresh_displayed_data()
+                self.show_main_content()
 
     def show_form(self, widget: Button):
         """Removes currently displayed elments and show a form where the user can
