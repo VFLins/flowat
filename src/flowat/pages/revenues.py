@@ -49,6 +49,11 @@ class RevenuesSection(BaseSection):
             style=style.SIMPLE_SQUARE_BUTTON,
             on_press=self.show_revenue_details_dialog,
         )
+        self.delete_revenue_button = Button(
+            text="🗑",
+            style=style.SIMPLE_SQUARE_BUTTON,
+            on_press=self.rm_revenue,
+        )
         self.revenues_source.sort_ascending = False
         self._refresh_displayed_data()
 
@@ -80,11 +85,7 @@ class RevenuesSection(BaseSection):
                         on_change=self._on_search_update,
                     ),
                     Button("Adic. ↓", style=style.SIMPLE_BUTTON, on_press=self.change_sorting),
-                    Button(
-                        text="🗑",
-                        style=style.SIMPLE_SQUARE_BUTTON,
-                        on_press=self.rm_revenue,
-                    ),
+                    self.delete_revenue_button,
                     self.revenue_details_button,
                     Button(
                         text="+",
@@ -234,9 +235,11 @@ class RevenuesSection(BaseSection):
     def _on_select_revenue(self, widget: Table):
         """Actions performed when an revenue is selected or `widget` loses selection."""
         if widget.selection is None:
+            self.delete_revenue_button.enabled = False
             self.revenue_details_button.enabled = False
             self.SELECTED_REVENUE.clear()
         else:
+            self.delete_revenue_button.enabled = True
             self.revenue_details_button.enabled = True
             self.SELECTED_REVENUE.read(row_id=widget.selection.id)
             print(f"INFO: selected revenue id: {self.SELECTED_REVENUE.Id}")

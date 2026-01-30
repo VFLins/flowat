@@ -47,6 +47,11 @@ class ExpensesSection(BaseSection):
         self.expenses_list_annotation = Label(
             style=Pack(font_size=9, margin=5, flex=1), text=""
         )
+        self.delete_expense_button = Button(
+            text="🗑",
+            style=style.SIMPLE_SQUARE_BUTTON,
+            on_press=self.rm_expense,
+        )
         self.expense_details_button = Button(
             text="ⓘ",
             enabled=False,
@@ -92,11 +97,7 @@ class ExpensesSection(BaseSection):
                         on_change=self._on_search_update,
                     ),
                     Button("Adic. ↓", style=style.SIMPLE_BUTTON, on_press=self.change_sorting),
-                    Button(
-                        text="🗑",
-                        style=style.SIMPLE_SQUARE_BUTTON,
-                        on_press=self.rm_expense,
-                    ),
+                    self.delete_expense_button,
                     self.expense_details_button,
                     Button(
                         text="+",
@@ -227,9 +228,11 @@ class ExpensesSection(BaseSection):
     def _on_select_expense(self, widget: Table):
         """Actions performed when an expense is selected or `widget` loses selection."""
         if widget.selection is None:
+            self.delete_expense_button.enabled = False
             self.expense_details_button.enabled = False
             self.SELECTED_EXPENSE.clear()
         else:
+            self.delete_expense_button.enabled = True
             self.expense_details_button.enabled = True
             self.SELECTED_EXPENSE.read(row_id=widget.selection.id)
             print(f"INFO: selected expense id: {self.SELECTED_EXPENSE.Id}")
