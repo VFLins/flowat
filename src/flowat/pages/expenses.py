@@ -82,7 +82,7 @@ class ExpensesSection(BaseSection):
             ],
         )
         self.expense_summary = Column(
-            style=Pack(width=515),
+            style=style.MAIN_CONTAINER,
             children=[
                 self.plot_expense,
                 Row(style=Pack(align_items="center"), children=[
@@ -183,6 +183,7 @@ class ExpensesSection(BaseSection):
         expense = self._get_expense_form_entry()
         # TODO: add confirmation dialog
         expense.write()
+        self._clear_expense_form()
         self._refresh_displayed_data()
         self.show_main_content(widget=widget)
 
@@ -309,8 +310,7 @@ class ExpensesSection(BaseSection):
         there is no expense data in the database. The 'first interaction' container
         may include a 'restore backup' button if there's also no revenue data.
         """
-        expense_data = db.ExpenseEntry()
-        if expense_data.table_is_empty():
+        if db.ExpenseEntry().table_is_empty():
             return self.first_interaction
         else:
             return self.expense_summary
@@ -320,11 +320,27 @@ class ExpensesSection(BaseSection):
         no_data = True
         container = Box()
 
+    def _clear_expense_form(self):
+        """Resets expense form fields to their default values."""
+        # expense type
+        type_field = self._app.widgets["expense_form_type_selection"]
+        type_data = self.expense_type_source.current_data
+        type_field.value = type_data[0].Name if bool(type_data) else ""
+        # description
+        self._app.widgets["expense_form_description_search"].input.value = ""
+        # barcode
+        self._app.widgets["expense_form_barcode"].input.value = ""
+        # date
+        self.date_input.value = date.today()
+        # value
+        self._app.widgets["expense_form_value"].input.value = ""
+
+
     def _ensure_expense_types(self):
         expense_categories = [
             "Boleto Bancário",
             "Cheque",
-            "Folha de Pagamento",
+            "Folha De Pagamento",
             "Tributo",
             "Conta (Água, Telefone, Etc.)",
             "Fatura Do Cartão De Crédito",
