@@ -103,9 +103,9 @@ class MainSection(BaseSection):
         self.full_contents.remove(*sections_contents)
         # add current section content
         if widget.id == self._BUTTON_IDS[1]:
-            self.revenue_section._refresh_layout()
-            self.full_contents.add(self.revenue_section.full_contents)
+            clicked_section = self.revenue_section
         if widget.id == self._BUTTON_IDS[0]:
-            self.expense_section._refresh_layout()
-            self.full_contents.add(self.expense_section.full_contents)
+            clicked_section = self.expense_section
+        self.full_contents.add(clicked_section.full_contents)
+        clicked_section.show_main_content()
         self.full_contents.refresh()

@@ -19,7 +19,6 @@ from .base import BaseSection
 from flowat.const import style, icon
 from flowat.data import db, source, fmt
 from flowat.plot.bar import colplot
-from flowat.plot.base import month_labels
 from flowat.form.date import HorizontalDateForm
 from flowat.form.elem import FormField, Heading
 
@@ -117,7 +116,7 @@ class ExpensesSection(BaseSection):
             style=style.FORM_CONTAINER,
             children=[
                 FormField(
-                    id="expense_form_type_selection",
+                    id="expense_form_type",
                     input_widget=Selection(
                         items=[r.Name for r in self.expense_type_source.current_data],
                     ),
@@ -125,7 +124,7 @@ class ExpensesSection(BaseSection):
                     unstyled=True,
                 ),
                 FormField(
-                    id="expense_form_description_search",
+                    id="expense_form_description",
                     input_widget=TextInput(on_change=self._on_form_update),
                     label="Descrição",
                     unstyled=True,
@@ -214,7 +213,7 @@ class ExpensesSection(BaseSection):
         self.main_container.style = style.MAIN_CONTAINER
         self.main_container.add(self.expense_form)
 
-    def show_main_content(self, widget: Button):
+    def show_main_content(self, widget: Button | None = None):
         """Removes currently displayed elments and show a summary of expenses."""
         self.main_container.clear()
         if db.ExpenseEntry().table_is_empty():
@@ -248,7 +247,7 @@ class ExpensesSection(BaseSection):
         return db.ExpenseEntry(
             IdExpenseType=type_map[type_field.input.value],
             TimeStamp=datetime.now(),
-            Description=self._app.widgets["expense_form_description_search"].input.value,
+            Description=self._app.widgets["expense_form_description"].input.value,
             Barcode=barcode_fmt.value,
             TransactionDate=self.date_input.value,
             TransactionValue=value_fmt.value,
@@ -315,7 +314,7 @@ class ExpensesSection(BaseSection):
 
     def show_expense_details_dialog(self, widget: Button):
         """Show a dialog with details of the selected expense."""
-        info_dialog = InfoDialog("Informações do gasto", str(self.SELECTED_EXPENSE))
+        info_dialog = InfoDialog("Informações deste gasto", str(self.SELECTED_EXPENSE))
         asyncio.create_task(self._app.main_window.dialog(info_dialog))
 
     def show_expense_type_dialog(self, widget: Button):
@@ -331,15 +330,10 @@ class ExpensesSection(BaseSection):
         else:
             return self.expense_summary
 
-    def _refresh_layout(self) -> Box:
-        no_expense_data = True
-        no_data = True
-        container = Box()
-
     def _clear_expense_form(self):
         """Resets expense form fields to their default values."""
         # expense type
-        type_field = self._app.widgets["expense_form_type_selection"]
+        type_field = self._app.widgets["expense_form_type"]
         type_data = self.expense_type_source.current_data
         type_field.value = type_data[0].Name if bool(type_data) else ""
         # description
@@ -350,7 +344,6 @@ class ExpensesSection(BaseSection):
         self.date_input.value = date.today()
         # value
         self._app.widgets["expense_form_value"].input.value = ""
-
 
     def _ensure_expense_types(self):
         expense_categories = [

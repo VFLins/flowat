@@ -1,4 +1,5 @@
 from toga import App
+from warnings import warn
 from toga.widgets.box import Box
 
 
@@ -12,3 +13,9 @@ class BaseSection:
         context. Should be overwritten by it's children.
         """
         self.full_contents.refresh()
+
+    def show_main_content(self):
+        """Ensure there is a main content to be displayed when the user navigates
+        to this section.
+        """
+        warn("This section did not implement any main content to display.")
