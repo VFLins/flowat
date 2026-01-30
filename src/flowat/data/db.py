@@ -273,10 +273,10 @@ class ExpenseEntry(DeclaredTable):
     def __repr__(self) -> str:
         return (
             f"{self.Description}\n"
-            f"Criado: {self.TimeStamp}\n"
-            f"Código de barras: {self.Barcode}\n"
-            f"Valor: R$ {self.TransactionValue:.2f}\n"
-            f"Vencimento: {self.TransactionDate}"
+            f"    Criado: {self.TimeStamp}\n"
+            f"    Código de barras: {self.Barcode}\n"
+            f"    Valor: R$ {self.TransactionValue:.2f}\n"
+            f"    Vencimento: {self.TransactionDate}"
         )
 
 
@@ -299,6 +299,13 @@ class RevenueEntry(DeclaredTable):
     TransactionDate = Column("TransactionDate", Date)
     TransactionValue = Column("TransactionValue", CurrencyAmount)
 
+    def __repr__(self) -> str:
+        return (
+            f"{self.Description}\n"
+            f"    Criado: {self.TimeStamp}\n"
+            f"    Valor: R$ {self.TransactionValue:.2f}\n"
+            f"    Data: {self.TransactionDate}"
+        )
 
 class ScannedInvoiceFile(DeclaredTable):
     __tablename__ = "scanned_invoice_files"
