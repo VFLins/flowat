@@ -189,7 +189,7 @@ class ExpensesSection(BaseSection):
             return
         plot_data = self.agg_expenses_source.current_data
         if plot_data:
-            dates, sums = zip(*plot_data)
+            dates, sums = zip(*plot_data[:6])  # first 6 months starting from current
             print(f"INFO: Loading plot data {dates=}, {sums=}")
             widget.content = colplot(x=dates, y=sums)
 
@@ -309,7 +309,7 @@ class ExpensesSection(BaseSection):
         )
         plot_data = self.agg_expenses_source.current_data
         if plot_data:
-            dates, sums = zip(*plot_data)
+            dates, sums = zip(*plot_data[:6])  # first 6 months starting from current
             print(f"INFO: Loading plot data {dates=}, {sums=}")
             self.plot_expense.content = colplot(x=dates, y=sums)
 
