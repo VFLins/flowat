@@ -89,29 +89,39 @@ class ExpensesSection(BaseSection):
             style=style.MAIN_CONTAINER,
             children=[
                 self.plot_expense,
-                Row(style=Pack(align_items="center"), children=[
-                    TextInput(
-                        id="expense_summary_search",
-                        placeholder="Pesquisa",
-                        style=Pack(margin=5, flex=1),
-                        on_change=self._on_search_update,
-                    ),
-                    Button("Adic. ↓", style=style.SIMPLE_BUTTON, on_press=self.change_sorting),
-                    self.delete_expense_button,
-                    self.expense_details_button,
-                    Button(
-                        text="+",
-                        style=style.SIMPLE_SQUARE_BUTTON,
-                        on_press=self.show_form,
-                    ),
-                ]),
+                Row(
+                    style=Pack(align_items="center"),
+                    children=[
+                        TextInput(
+                            id="expense_summary_search",
+                            placeholder="Pesquisa",
+                            style=Pack(margin=5, flex=1),
+                            on_change=self._on_search_update,
+                        ),
+                        Button(
+                            "Adic. ↓",
+                            style=style.SIMPLE_BUTTON,
+                            on_press=self.change_sorting,
+                        ),
+                        self.delete_expense_button,
+                        self.expense_details_button,
+                        Button(
+                            text="+",
+                            style=style.SIMPLE_SQUARE_BUTTON,
+                            on_press=self.show_form,
+                        ),
+                    ],
+                ),
                 self.expenses_list,
-                Row(style=Pack(align_items="center"), children=[
-                    self.expenses_list_annotation,
-                    Button("anterior", style=style.SIMPLE_SMALL_BUTTON),
-                    Button("próximo", style=style.SIMPLE_SMALL_BUTTON),
-                ])
-            ]
+                Row(
+                    style=Pack(align_items="center"),
+                    children=[
+                        self.expenses_list_annotation,
+                        Button("anterior", style=style.SIMPLE_SMALL_BUTTON),
+                        Button("próximo", style=style.SIMPLE_SMALL_BUTTON),
+                    ],
+                ),
+            ],
         )
         self.expense_form = Column(
             style=style.FORM_CONTAINER,
@@ -172,14 +182,16 @@ class ExpensesSection(BaseSection):
             children=[self.main_container],
         )
 
-    def _on_reload_plot(self, widget: WebView):
+    def _on_reload_plot(self, widget: WebView, **kwargs):
         n_loads = getattr(widget, "_n_loads", 0)
         widget._n_loads = n_loads + 1
         if widget._n_loads % 2 == 1:
             return
-        dates, sums = zip(*self.agg_expenses_source.current_data)
-        print(f"INFO: Loading plot data {dates=}, {sums=}")
-        widget.content = colplot(x=dates, y=sums)
+        plot_data = self.agg_expenses_source.current_data
+        if plot_data:
+            dates, sums = zip(*plot_data)
+            print(f"INFO: Loading plot data {dates=}, {sums=}")
+            widget.content = colplot(x=dates, y=sums)
 
     def add_expense(self, widget: Button):
         """Prompts to user to confirm the inserted data, in the positive case, writes
@@ -197,15 +209,17 @@ class ExpensesSection(BaseSection):
         """Prompts the user to confirm removal of the selected expense, in the positive
         case, removes transaction from the database. Does nothing otherwise.
         """
-        confirm_dialog = ConfirmDialog("Excluir esta transação?", str(self.SELECTED_EXPENSE))
+        confirm_dialog = ConfirmDialog(
+            "Excluir esta transação?", str(self.SELECTED_EXPENSE)
+        )
         task = asyncio.create_task(self._app.main_window.dialog(confirm_dialog))
         task.add_done_callback(self.rm_expense_response)
 
     def rm_expense_response(self, task: asyncio.Task):
-            if task.result():
-                self.SELECTED_EXPENSE.delete()
-                self._refresh_displayed_data()
-                self.show_main_content()
+        if task.result():
+            self.SELECTED_EXPENSE.delete()
+            self._refresh_displayed_data()
+            self.show_main_content()
 
     def show_form(self, widget: Button):
         """Removes currently displayed elments and show a form where the user can
@@ -238,7 +252,7 @@ class ExpensesSection(BaseSection):
             print(f"INFO: selected expense id: {self.SELECTED_EXPENSE.Id}")
 
     def _get_expense_form_entry(self) -> db.ExpenseEntry:
-        type_field: Selection = self._app.widgets["expense_form_type_selection"]
+        type_field: Selection = self._app.widgets["expense_form_type"]
         type_map = {name: id for id, name in self.expense_type_source.current_data}
         barcode_fmt = fmt.StringToBarcodeITF25(
             user_input=self._app.widgets["expense_form_barcode"].input.value,
@@ -277,8 +291,8 @@ class ExpensesSection(BaseSection):
 
     def _refresh_displayed_data(self):
         """Refreshes data displayed in the summary section from both plot and table."""
-        self.expenses_list.data = None # winforms needs to clear before filling
-        self.expenses_list.data=[
+        self.expenses_list.data = None  # winforms needs to clear before filling
+        self.expenses_list.data = [
             {
                 "tipo": r.TransactionType,
                 "descrição": r.Description,
@@ -293,14 +307,18 @@ class ExpensesSection(BaseSection):
             f"mostrando {self.expenses_source.min_idx + 1} "
             f"até {self.expenses_source.max_idx}"
         )
-        dates, sums = zip(*self.agg_expenses_source.current_data)
-        print(f"INFO: Loading plot data {dates=}, {sums=}")
-        self.plot_expense.content = colplot(x=dates, y=sums)
+        plot_data = self.agg_expenses_source.current_data
+        if plot_data:
+            dates, sums = zip(*plot_data)
+            print(f"INFO: Loading plot data {dates=}, {sums=}")
+            self.plot_expense.content = colplot(x=dates, y=sums)
 
     def change_sorting(self, widget: Button):
         sort_options = ["Adic. ↓", "Adic. ↑", "Venc. ↓", "Venc. ↑"]
         current_idx = sort_options.index(widget.text)
-        widget.text = sort_options[0 if current_idx==len(sort_options) - 1 else current_idx + 1]
+        widget.text = sort_options[
+            0 if current_idx == len(sort_options) - 1 else current_idx + 1
+        ]
         match widget.text:
             case "Venc. ↑":
                 self.expenses_source.sort_column = "TransactionDate"
@@ -341,7 +359,7 @@ class ExpensesSection(BaseSection):
         type_data = self.expense_type_source.current_data
         type_field.value = type_data[0].Name if bool(type_data) else ""
         # description
-        self._app.widgets["expense_form_description_search"].input.value = ""
+        self._app.widgets["expense_form_description"].input.value = ""
         # barcode
         self._app.widgets["expense_form_barcode"].input.value = ""
         # date
