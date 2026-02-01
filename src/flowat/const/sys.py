@@ -65,12 +65,11 @@ def _linux_dark_mode() -> bool:
     return "dark" in result.stdout.lower()
 
 
-if sys_dark_mode():
-    BG_COLOR = "#222226"
-    FG_COLOR = "#e1e1e1"
-else:
-    if platform == "win32":
-        BG_COLOR = "#f0f0f0"
+def get_colors() -> dict[str, str]:
+    if sys_dark_mode():
+        return {"BG_COLOR": "#222226", "FG_COLOR": "#e1e1e1"}
     else:
-        BG_COLOR = "#fafafb"
-    FG_COLOR = "#1e1e1e"
+        return {
+            "BG_COLOR": "#f0f0f0" if platform == "win32" else "#fafafb",
+            "FG_COLOR": "#1e1e1e",
+        }
