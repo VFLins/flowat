@@ -213,7 +213,7 @@ class MaxAllowedValue(_Config):
             parser_factory=get_default_parser,
             section="default",
             key="max_allowed_value",
-            default=9999999
+            default=9999999,
         )
 
     @classmethod

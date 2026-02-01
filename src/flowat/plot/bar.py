@@ -12,8 +12,11 @@ from flowat.const.sys import BG_COLOR, FG_COLOR
 
 def _set_layout(figure: Figure, x: list[str], y: list[float]) -> Figure:
     yticktext = [
-        f"R$ {v/1000:.1f} mil".replace(".", ",")
-        if v >= 1000 else f"R$ {v:.2f}".replace(".", ",")
+        (
+            f"R$ {v / 1000:.1f} mil".replace(".", ",")
+            if v >= 1000
+            else f"R$ {v:.2f}".replace(".", ",")
+        )
         for v in y
     ]
     xticktext = [datetime.strptime(v, "%Y-%m").strftime("%b. %y").title() for v in x]
@@ -24,7 +27,7 @@ def _set_layout(figure: Figure, x: list[str], y: list[float]) -> Figure:
         xaxis_title=None,
         xaxis={
             "tickmode": "array",
-            "tickvals":x,
+            "tickvals": x,
             "ticktext": xticktext,
             "fixedrange": True,
         },

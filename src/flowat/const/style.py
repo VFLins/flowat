@@ -16,10 +16,18 @@ CENTERED_MAIN_CONTAINER = Pack(
     align_items="center", flex=1, direction="row", margin=(0, 0, 20, 0)
 )
 MAIN_CONTAINER = Pack(
-    align_items="center", flex=1, direction="column", width=CONTENT_WIDTH, margin=(0, 0, 20, 0)
+    align_items="center",
+    flex=1,
+    direction="column",
+    width=CONTENT_WIDTH,
+    margin=(0, 0, 20, 0),
 )
 FORM_CONTAINER = Pack(
-        align_items="center", flex=1, direction="column", width=FORM_WIDTH, margin=(0, 0, 20, 0)
+    align_items="center",
+    flex=1,
+    direction="column",
+    width=FORM_WIDTH,
+    margin=(0, 0, 20, 0),
 )
 
 # labels

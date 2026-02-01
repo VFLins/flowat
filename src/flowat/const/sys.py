@@ -72,5 +72,5 @@ else:
     if platform == "win32":
         BG_COLOR = "#f0f0f0"
     else:
-        BG_COLOR = "#fff"
+        BG_COLOR = "#fafafb"
     FG_COLOR = "#1e1e1e"
