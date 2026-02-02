@@ -1,9 +1,11 @@
+from toga.widgets.numberinput import NumberInput
 from toga.widgets.imageview import ImageView
 from toga.widgets.textinput import TextInput
 from toga.widgets.selection import Selection
 from toga.widgets.webview import WebView
 from toga.widgets.divider import Divider
 from toga.widgets.button import Button
+from toga.widgets.switch import Switch
 from toga.widgets.table import Table
 from toga.widgets.label import Label
 from toga.widgets.box import Box, Row, Column
@@ -57,6 +59,15 @@ class ExpensesSection(BaseSection):
             enabled=False,
             style=style.SIMPLE_SQUARE_BUTTON,
             on_press=self.show_expense_details_dialog,
+        )
+        self.recurring_expense_switch = FormField(
+            input_widget=Switch(""),
+            label="Parcelas mensais",
+        )
+        self.recurring_expense_amount = FormField(
+            input_widget=NumberInput(min=2, step=1),
+            label="Meses",
+            unstyled=True,
         )
         self.expenses_source.sort_ascending = False
         self._refresh_displayed_data()
@@ -147,6 +158,10 @@ class ExpensesSection(BaseSection):
                     unstyled=True,
                 ),
                 self.date_input.widget,
+                Row(
+                    id="expense_form_recurrency_container",
+                    children=[self.recurring_expense_switch],
+                ),
                 Row(
                     style=Pack(align_items="end"),
                     children=[
