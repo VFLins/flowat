@@ -5,6 +5,7 @@ from sqlalchemy import (
     func,
     select,
     or_,
+    and_,
     text,
     cast,
     extract,
@@ -68,9 +69,11 @@ class _DataSource:
         selected_colnames = select_stmt.selected_columns.keys()
         for col in search_colnames:
             if col not in selected_colnames:
-                raise ValueError(f"Expected all `search_colnames` to be present in {
+                raise ValueError(
+                    f"Expected all `search_colnames` to be present in {
                         selected_colnames
-                    }.")
+                    }."
+                )
         self.SEARCH_COLNAMES = search_colnames
         if paginated:
             self._current_page = 1
@@ -318,8 +321,13 @@ class AggregatedExpensesSource(_DataSource):
         stmt = (
             select(date_col, sums_col)
             .where(
-                extract("year", ExpenseEntry.TransactionDate) >= today.year,
-                extract("month", ExpenseEntry.TransactionDate) >= today.month,
+                or_(
+                    and_(
+                        extract("year", ExpenseEntry.TransactionDate) == today.year,
+                        extract("month", ExpenseEntry.TransactionDate) >= today.month,
+                    ),
+                    extract("year", ExpenseEntry.TransactionDate) > today.year,
+                )
             )
             .group_by(date_col)
         )
@@ -336,8 +344,13 @@ class AggregatedRevenuesSource(_DataSource):
         stmt = (
             select(date_col, sums_col)
             .where(
-                extract("year", RevenueEntry.TransactionDate) >= today.year,
-                extract("month", RevenueEntry.TransactionDate) >= today.month,
+                or_(
+                    and_(
+                        extract("year", RevenueEntry.TransactionDate) == today.year,
+                        extract("month", RevenueEntry.TransactionDate) >= today.month,
+                    ),
+                    extract("year", RevenueEntry.TransactionDate) > today.year,
+                )
             )
             .group_by(date_col)
         )

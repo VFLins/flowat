@@ -38,9 +38,8 @@ class StringToCurrency(_Formatter):
     @property
     def display_value(self) -> str:
         """Format the user input to be displayed on the UI."""
-        numeric = (
-            Decimal(self.value/100)
-            .quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        numeric = Decimal(self.value / 100).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
         )
         return f"{numeric:,.2f}".replace(",", " ").replace(".", ",")
 

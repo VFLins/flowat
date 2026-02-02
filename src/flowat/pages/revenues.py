@@ -38,7 +38,7 @@ class RevenuesSection(BaseSection):
         self.revenues_list = Table(
             style=Pack(flex=1),
             on_select=self._on_select_revenue,
-            headings=["Descrição", "Tipo", "Valor", "Data"]
+            headings=["Descrição", "Tipo", "Valor", "Data"],
         )
         self.revenues_list_annotation = Label(
             style=Pack(font_size=9, margin=5, flex=1), text=""
@@ -68,37 +68,51 @@ class RevenuesSection(BaseSection):
                     "Nenhum registro encontrado, você pode:",
                     style=Pack(font_size=13, text_align="center", margin=(0, 0, 30, 0)),
                 ),
-                Button("Inserir primeira receita", style=style.BIG_BUTTON, on_press=self.show_form),
+                Button(
+                    "Inserir primeira receita",
+                    style=style.BIG_BUTTON,
+                    on_press=self.show_form,
+                ),
                 Button("Ler vendas do PDV", style=style.BIG_BUTTON),
-                Button("Restaurar um backup", style=style.BIG_BUTTON)
+                Button("Restaurar um backup", style=style.BIG_BUTTON),
             ],
         )
         self.revenue_summary = Column(
             style=style.MAIN_CONTAINER,
             children=[
                 self.plot_revenue,
-                Row(style=Pack(align_items="center"), children=[
-                    TextInput(
-                        id="revenue_summary_search",
-                        placeholder="Pesquisa",
-                        style=Pack(margin=5, flex=1),
-                        on_change=self._on_search_update,
-                    ),
-                    Button("Adic. ↓", style=style.SIMPLE_BUTTON, on_press=self.change_sorting),
-                    self.delete_revenue_button,
-                    self.revenue_details_button,
-                    Button(
-                        text="+",
-                        style=style.SIMPLE_SQUARE_BUTTON,
-                        on_press=self.show_form,
-                    ),
-                ]),
+                Row(
+                    style=Pack(align_items="center"),
+                    children=[
+                        TextInput(
+                            id="revenue_summary_search",
+                            placeholder="Pesquisa",
+                            style=Pack(margin=5, flex=1),
+                            on_change=self._on_search_update,
+                        ),
+                        Button(
+                            "Adic. ↓",
+                            style=style.SIMPLE_BUTTON,
+                            on_press=self.change_sorting,
+                        ),
+                        self.delete_revenue_button,
+                        self.revenue_details_button,
+                        Button(
+                            text="+",
+                            style=style.SIMPLE_SQUARE_BUTTON,
+                            on_press=self.show_form,
+                        ),
+                    ],
+                ),
                 self.revenues_list,
-                Row(style=Pack(align_items="center"), children=[
-                    self.revenues_list_annotation,
-                    Button("anterior", style=style.SIMPLE_SMALL_BUTTON),
-                    Button("próximo", style=style.SIMPLE_SMALL_BUTTON),
-                ])
+                Row(
+                    style=Pack(align_items="center"),
+                    children=[
+                        self.revenues_list_annotation,
+                        Button("anterior", style=style.SIMPLE_SMALL_BUTTON),
+                        Button("próximo", style=style.SIMPLE_SMALL_BUTTON),
+                    ],
+                ),
             ],
         )
         self.revenue_form = Column(
@@ -106,7 +120,9 @@ class RevenuesSection(BaseSection):
             children=[
                 FormField(
                     id="revenue_form_type",
-                    input_widget=Selection(items=[r.Name for r in self.revenue_type_source.current_data]),
+                    input_widget=Selection(
+                        items=[r.Name for r in self.revenue_type_source.current_data]
+                    ),
                     label="Tipo",
                     unstyled=True,
                 ),
@@ -140,7 +156,7 @@ class RevenuesSection(BaseSection):
                         ),
                     ],
                 ),
-            ]
+            ],
         )
         self.main_container = Box(
             style=style.CENTERED_MAIN_CONTAINER,
@@ -148,9 +164,7 @@ class RevenuesSection(BaseSection):
         )
         self.full_contents = Box(
             style=Pack(align_items="center", flex=1, direction="row"),
-            children=[
-                self.main_container
-            ],
+            children=[self.main_container],
         )
 
     def show_form(self, widget: Button):
@@ -173,7 +187,9 @@ class RevenuesSection(BaseSection):
 
     def show_revenue_details_dialog(self, widget: Button):
         """Show a dialog with details of the selected revenue."""
-        info_dialog = InfoDialog("Informações desta receita", str(self.SELECTED_REVENUE))
+        info_dialog = InfoDialog(
+            "Informações desta receita", str(self.SELECTED_REVENUE)
+        )
         asyncio.create_task(self._app.main_window.dialog(info_dialog))
 
     def add_revenue(self, widget: Button):
@@ -192,7 +208,9 @@ class RevenuesSection(BaseSection):
         """Prompts the user to confirm removal of the selected revenue, in the positive
         case, removes transaction from the database. Does nothing otherwise.
         """
-        confirm_dialog = ConfirmDialog("Excluir esta receita?", str(self.SELECTED_REVENUE))
+        confirm_dialog = ConfirmDialog(
+            "Excluir esta receita?", str(self.SELECTED_REVENUE)
+        )
         task = asyncio.create_task(self._app.main_window.dialog(confirm_dialog))
         task.add_done_callback(self.rm_revenue_response)
 
@@ -205,7 +223,9 @@ class RevenuesSection(BaseSection):
     def change_sorting(self, widget: Button):
         sort_options = ["Adic. ↓", "Adic. ↑", "Venc. ↓", "Venc. ↑"]
         current_idx = sort_options.index(widget.text)
-        widget.text = sort_options[0 if current_idx==len(sort_options) - 1 else current_idx + 1]
+        widget.text = sort_options[
+            0 if current_idx == len(sort_options) - 1 else current_idx + 1
+        ]
         match widget.text:
             case "Venc. ↑":
                 self.revenues_source.sort_column = "TransactionDate"
@@ -228,7 +248,7 @@ class RevenuesSection(BaseSection):
             return
         plot_data = self.agg_revenues_source.current_data
         if plot_data:
-            dates, sums = zip(*plot_data)
+            dates, sums = zip(*plot_data[:6])  # first 6 months starting from current
             print(f"INFO: Loading plot data: {dates=}, {sums=}")
             self.plot_revenue.content = colplot(x=dates, y=sums)
 
@@ -254,8 +274,8 @@ class RevenuesSection(BaseSection):
 
     def _refresh_displayed_data(self):
         """Refreshes data displayed in the summary section from both plot and table."""
-        self.revenues_list.data = None # winforms needs to clear before filling
-        self.revenues_list.data=[
+        self.revenues_list.data = None  # winforms needs to clear before filling
+        self.revenues_list.data = [
             {
                 "tipo": r.TransactionType,
                 "descrição": r.Description,
@@ -272,7 +292,7 @@ class RevenuesSection(BaseSection):
         )
         plot_data = self.agg_revenues_source.current_data
         if plot_data:
-            dates, sums = zip(*plot_data)
+            dates, sums = zip(*plot_data[:6])  # first 6 months starting from current
             print(f"INFO: Loading plot data: {dates=}, {sums=}")
             self.plot_revenue.content = colplot(x=dates, y=sums)
 
@@ -303,7 +323,7 @@ class RevenuesSection(BaseSection):
         type_field: Selection = self._app.widgets["revenue_form_type"]
         type_map = {name: id for id, name in self.revenue_type_source.current_data}
         value_fmt = fmt.StringToCurrency(
-                user_input=self._app.widgets["revenue_form_value"].input.value,
+            user_input=self._app.widgets["revenue_form_value"].input.value,
             field_name="Valor",
         )
         return db.RevenueEntry(
@@ -325,9 +345,7 @@ class RevenuesSection(BaseSection):
             self._app.widgets["revenue_form_confirm"].enabled = False
 
     def _ensure_revenue_types(self):
-        revenue_categories = [
-        "Recebível À Vista", "Parcela De Recebível À Prazo"
-        ]
+        revenue_categories = ["Recebível À Vista", "Parcela De Recebível À Prazo"]
         current_data = [r.Name for r in self.revenue_type_source.current_data]
         for categ in revenue_categories:
             if categ not in current_data:

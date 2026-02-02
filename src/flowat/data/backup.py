@@ -29,13 +29,10 @@ for dirpath in [FLOWAT_FILES_PATH, CONFIG_PATH, LOG_PATH, BACKUP_PATH]:
 
 logger = logging.getLogger(__name__)
 loghandler = logging.FileHandler(filename=LOG_FILE, mode="a", encoding="utf-8")
-loghandler.setFormatter(
-    logging.Formatter("%(asctime)s %(levelname)s: %(message)s")
-)
+loghandler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s: %(message)s"))
 loghandler.setLevel(logging.DEBUG)
 logger.addHandler(loghandler)
 logger.setLevel(logging.DEBUG)
-
 
 
 def copy_file(source_path: str, target_dir: str):
@@ -46,7 +43,9 @@ def copy_file(source_path: str, target_dir: str):
     """
     logger.debug("function call: copy_file")
     if not path.exists(target_dir):
-        logger.error(f"Could not copy file to '{target_dir}', directory does not exist.")
+        logger.error(
+            f"Could not copy file to '{target_dir}', directory does not exist."
+        )
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S_%f")
     try:
         filename = f"backup_{now}.db"

@@ -263,7 +263,9 @@ class ExpenseEntry(DeclaredTable):
         back_populates="ExpenseEntryRelation"
     )
 
-    IdExpenseType: Mapped[int] = Column("IdExpenseType", ForeignKey("expense_types.Id"), nullable=False)
+    IdExpenseType: Mapped[int] = Column(
+        "IdExpenseType", ForeignKey("expense_types.Id"), nullable=False
+    )
     TimeStamp: Mapped[datetime] = Column(DateTime(timezone=True), nullable=False)
     Description = Column("Description", RequiredText, nullable=False)
     Barcode = Column("Barcode", NotRequiredText)
@@ -306,6 +308,7 @@ class RevenueEntry(DeclaredTable):
             f"    Valor: R$ {self.TransactionValue:.2f}\n"
             f"    Data: {self.TransactionDate}"
         )
+
 
 class ScannedInvoiceFile(DeclaredTable):
     __tablename__ = "scanned_invoice_files"
