@@ -280,7 +280,7 @@ class RevenuesSection(BaseSection):
                 "tipo": r.TransactionType,
                 "descrição": r.Description,
                 "valor": r.TransactionValue,
-                "vencimento": r.TransactionDate,
+                "data": r.TransactionDate,
                 "id": r.Id,
             }
             for r in self.revenues_source.current_data
