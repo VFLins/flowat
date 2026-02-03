@@ -71,7 +71,7 @@ class FormField(Box):
             description_widget = Label(
                 text=description,
                 id=f"{id}_desc" if id else f"{label}_desc",
-                style=input_annotation("legend"),
+                style=style.input_annotation("legend"),
             )
             self.contents.add(description_widget)
             self.contents.description = description_widget

@@ -61,12 +61,13 @@ class ExpensesSection(BaseSection):
             on_press=self.show_expense_details_dialog,
         )
         self.recurring_expense_switch = FormField(
-            input_widget=Switch(""),
+            input_widget=Switch("", on_change=self._on_change_recurring_expense_switch),
             label="Parcelas mensais",
         )
         self.recurring_expense_amount = FormField(
             input_widget=NumberInput(min=2, step=1),
             label="Meses",
+            description="Informe a data da primeira\ntransação acima.",
             unstyled=True,
         )
         self.expenses_source.sort_ascending = False
@@ -303,6 +304,16 @@ class ExpensesSection(BaseSection):
         search_widget = self._app.widgets["expense_summary_search"]
         self.expenses_source.search_text = search_widget.value
         self._refresh_displayed_data()
+
+    def _on_change_recurring_expense_switch(self, widget: Switch):
+        """Actions performed when the user changes the state of the "Monthly expense"
+        switch.
+        """
+        container = self._app.widgets["expense_form_recurrency_container"]
+        if widget.value:
+            container.add(self.recurring_expense_amount)
+        else:
+            container.remove(self.recurring_expense_amount)
 
     def _refresh_displayed_data(self):
         """Refreshes data displayed in the summary section from both plot and table."""
