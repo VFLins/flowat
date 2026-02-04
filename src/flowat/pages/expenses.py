@@ -15,6 +15,7 @@ from toga.style import Pack
 
 from datetime import date, datetime
 import asyncio
+from sys import platform
 
 from .base import BaseSection
 
@@ -60,14 +61,18 @@ class ExpensesSection(BaseSection):
             style=style.SIMPLE_SQUARE_BUTTON,
             on_press=self.show_expense_details_dialog,
         )
-        self.recurring_expense_switch = FormField(
-            input_widget=Switch("", on_change=self._on_change_recurring_expense_switch),
-            label="Parcelas mensais",
+        self.recurring_expense_switch = Switch(
+            "Parcelas mensais",
+            style=Pack(
+                margin_top=5 if platform=="linux" else 0,
+                width=style.FORM_WIDTH/2 if platform=="linux" else style.FORM_WIDTH/3.4,
+            ),
+            on_change=self._on_change_recurring_expense_switch,
         )
         self.recurring_expense_amount = FormField(
-            input_widget=NumberInput(min=2, step=1),
+            input_widget=NumberInput(value=2, min=2, step=1),
             label="Meses",
-            description="Informe a data da primeira\ntransação acima.",
+            description="Informe a data da primeira transação acima.",
             unstyled=True,
         )
         self.expenses_source.sort_ascending = False
@@ -159,7 +164,8 @@ class ExpensesSection(BaseSection):
                     unstyled=True,
                 ),
                 self.date_input.widget,
-                Row(
+                Column(
+                    style=Pack(align_items="end"),
                     id="expense_form_recurrency_container",
                     children=[self.recurring_expense_switch],
                 ),

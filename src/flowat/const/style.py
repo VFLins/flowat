@@ -66,7 +66,7 @@ def input_annotation(annotation_type: Literal["label", "legend"] = "label") -> P
     if annotation_type == "label":
         return _system_based_input_label_style()
     elif annotation_type == "legend":
-        return Pack(font_size=10, margin=(0, 0, 10, 5))
+        return _system_based_input_legend_style()
     else:
         raise ValueError(f"{annotation_type=}, expected one of 'label', 'legend'.")
 
@@ -84,11 +84,19 @@ def selection_width():
 
 
 def _system_based_input_label_style() -> Pack:
-    """OS based style for a `toga.Label` element used as label to an input field."""
+    """OS based style for a `toga.Label` element used as label of an input field."""
     if platform == "linux":
         return Pack(margin=(15, 5, 2, 8))
     else:
-        return Pack(margin=(15, 5, 2, 2))
+        return Pack(margin=(10, 5, 2, 0))
+
+
+def _system_based_input_legend_style() -> Pack:
+    """OS based style for a `toga.Label` element used as legend of an input field."""
+    if platform == "linux":
+        return Pack(font_size=9, margin=(0, 0, 10, 5))
+    else:
+        return Pack(font_size=8, margin=(0, 0, 10, 0))
 
 
 def _system_based_selection_style() -> Pack:
