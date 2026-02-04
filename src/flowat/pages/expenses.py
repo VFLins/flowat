@@ -63,7 +63,7 @@ class ExpensesSection(BaseSection):
         )
         self.recurring_expense_switch = Switch(
             "Parcelas mensais",
-            style=Pack(margin=(5, 20, 0, 5), width=style.FORM_WIDTH*0.45),
+            style=Pack(margin=(15, 20, 0, 5), width=style.FORM_WIDTH*0.45),
             on_change=self._on_change_recurring_expense_switch,
         )
         self.recurring_expense_amount = NumberInput(
@@ -151,6 +151,11 @@ class ExpensesSection(BaseSection):
                     label="Descrição",
                     unstyled=True,
                 ),
+                Row(
+                    id="expense_form_recurrency_container",
+                    style=Pack(align_items="end", width=style.FORM_WIDTH),
+                    children=[self.recurring_expense_switch],
+                ),
                 FormField(
                     id="expense_form_barcode",
                     input_widget=TextInput(),
@@ -158,11 +163,6 @@ class ExpensesSection(BaseSection):
                     unstyled=True,
                 ),
                 self.date_input.widget,
-                Row(
-                    style=Pack(align_items="center", width=style.FORM_WIDTH),
-                    id="expense_form_recurrency_container",
-                    children=[self.recurring_expense_switch],
-                ),
                 Row(
                     style=Pack(align_items="end"),
                     children=[
