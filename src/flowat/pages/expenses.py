@@ -63,18 +63,10 @@ class ExpensesSection(BaseSection):
         )
         self.recurring_expense_switch = Switch(
             "Parcelas mensais",
-            style=Pack(
-                margin_top=5 if platform=="linux" else 0,
-                width=style.FORM_WIDTH/2 if platform=="linux" else style.FORM_WIDTH/3.4,
-            ),
+            style=Pack(margin_top=5, width=style.FORM_WIDTH * 0.64),
             on_change=self._on_change_recurring_expense_switch,
         )
-        self.recurring_expense_amount = FormField(
-            input_widget=NumberInput(value=2, min=2, step=1),
-            label="Meses",
-            description="Informe a data da primeira transação acima.",
-            unstyled=True,
-        )
+        self.recurring_expense_amount = NumberInput(value=2, min=2, step=1)
         self.expenses_source.sort_ascending = False
         self._refresh_displayed_data()
 
@@ -164,8 +156,8 @@ class ExpensesSection(BaseSection):
                     unstyled=True,
                 ),
                 self.date_input.widget,
-                Column(
-                    style=Pack(align_items="end"),
+                Row(
+                    style=Pack(align_items="center", width=style.FORM_WIDTH),
                     id="expense_form_recurrency_container",
                     children=[self.recurring_expense_switch],
                 ),
@@ -178,6 +170,7 @@ class ExpensesSection(BaseSection):
                                 placeholder="0,00", on_change=self._on_form_update
                             ),
                             label="Valor",
+                            unstyled=True,
                         ),
                         Button(
                             "Voltar",

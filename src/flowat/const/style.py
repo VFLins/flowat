@@ -9,7 +9,7 @@ from toga.widgets.selection import Selection
 from toga.widgets.numberinput import NumberInput
 
 CONTENT_WIDTH = 510
-FORM_WIDTH = 395
+FORM_WIDTH = 395 if platform=="linux" else 280
 
 # containers
 CENTERED_MAIN_CONTAINER = Pack(
