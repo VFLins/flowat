@@ -62,12 +62,12 @@ class ExpensesSection(BaseSection):
             on_press=self.show_expense_details_dialog,
         )
         self.recurring_expense_switch = Switch(
-            "Parcelas mensais",
-            style=Pack(margin=(15, 20, 0, 5), width=style.FORM_WIDTH * 0.45),
+            "Gasto em parcelas",
+            style=Pack(margin=(15, 20, 0, 5), width=style.FORM_WIDTH / 2),
             on_change=self._on_change_recurring_expense_switch,
         )
         self.recurring_expense_amount = NumberInput(
-            style=Pack(flex=1), value=2, min=2, step=1
+            style=Pack(flex=1), value=2, min=2, max=120, step=1
         )
         self.expenses_source.sort_ascending = False
         self._refresh_displayed_data()
