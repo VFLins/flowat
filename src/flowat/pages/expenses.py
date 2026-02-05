@@ -24,6 +24,7 @@ from flowat.data import db, source, fmt
 from flowat.plot.bar import colplot
 from flowat.form.date import HorizontalDateForm
 from flowat.form.elem import FormField, Heading
+from flowat.form.paginated import InputPaginator
 
 
 class ExpensesSection(BaseSection):
@@ -68,6 +69,16 @@ class ExpensesSection(BaseSection):
         )
         self.recurring_expense_amount = NumberInput(
             style=Pack(flex=1), value=2, min=2, max=120, step=1
+        )
+        # expense_form's initial data:
+        self.paginator = InputPaginator(
+            data=dict(
+                IdExpenseType=self.expense_type_source.current_data[0],
+                Description="",
+                Barcode="",
+                TransactionDate=date.today(),
+                TransactionValue="",
+            )
         )
         self.expenses_source.sort_ascending = False
         self._refresh_displayed_data()
@@ -163,17 +174,18 @@ class ExpensesSection(BaseSection):
                     unstyled=True,
                 ),
                 self.date_input.widget,
+                FormField(
+                    id="expense_form_value",
+                    input_widget=TextInput(
+                        placeholder="0,00", on_change=self._on_form_update
+                    ),
+                    label="Valor",
+                    unstyled=True,
+                ),
+                self.paginator.widget,
                 Row(
                     style=Pack(align_items="end"),
                     children=[
-                        FormField(
-                            id="expense_form_value",
-                            input_widget=TextInput(
-                                placeholder="0,00", on_change=self._on_form_update
-                            ),
-                            label="Valor",
-                            unstyled=True,
-                        ),
                         Button(
                             "Voltar",
                             style=style.SIMPLE_BUTTON,
@@ -313,8 +325,10 @@ class ExpensesSection(BaseSection):
         container = self._app.widgets["expense_form_recurrency_container"]
         if widget.value:
             container.add(self.recurring_expense_amount)
+            self.paginator.set_page_amount(self.recurring_expense_amount.value)
         else:
             container.remove(self.recurring_expense_amount)
+            self.paginator.set_page_amount(1)
 
     def _refresh_displayed_data(self):
         """Refreshes data displayed in the summary section from both plot and table."""

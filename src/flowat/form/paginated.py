@@ -2,8 +2,8 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 from typing import Any
 
-from toga.widgets.numberinput import NumberInput
-from toga.widgets.selection import Selection
+from toga.widgets.button import Button
+from toga.widgets.label import Label
 from toga.widgets.box import Row, Column
 from toga.style import Pack
 
@@ -25,7 +25,7 @@ class InputPaginator:
             self._data = [{}]
         self._current_page = 1
         self._current_data = self._data[0]
-        self.pagination_label = Label(f"1/{n_pages}"),
+        self.pagination_label = Label(f"1/{n_pages}")
         self.next_page_button = Button("próximo", style=style.SIMPLE_SMALL_BUTTON)
         self.previous_page_button = Button("anterior", style=style.SIMPLE_SMALL_BUTTON)
         self.widget = Row(
@@ -75,7 +75,7 @@ class InputPaginator:
         """
         if n > self.n_pages:
             last_page_data = self._data[len(self._data) - 1]
-            n_created = n - self.n_pages
+            n_created = int(n - self.n_pages)
             self._data = self._data + [last_page_data for d in range(n_created)]
         else:
             self._data = self._data[:n]
