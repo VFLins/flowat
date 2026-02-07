@@ -1,6 +1,6 @@
 from datetime import date
 from dateutil.relativedelta import relativedelta
-from typing import Any
+from typing import Any, Callable
 
 from toga.widgets.button import Button
 from toga.widgets.label import Label
@@ -12,24 +12,33 @@ from flowat.form.elem import FormField
 
 
 class InputPaginator:
-    def __init__(self, data: dict[str, Any] | None = None, n_pages: int = 1):
+    def __init__(
+        self,
+        data: dict[str, Any] | None = None,
+        n_pages: int = 1,
+        on_page_change: Callable[[], None] | None = None,
+    ):
         """Assigns a `toga.Box` with pagination widgets to it's `widget` property.
         Helps handling on muliple different input data in the same form.
 
         :data: Initial input of all pages.
         :n_pages: Initial amount of input sets handled.
+        :on_page_change: Callable indicating actions to be performed when the user
+            interacts with any pagination widget.
         """
         if data is not None:
             self._data = [data for i in range(n_pages)]
         else:
             self._data = [{}]
+        if on_page_change is not None:
+            self._on_page_change = on_page_change
         self._current_page = 1
         self._current_data = self._data[0]
         self.pagination_label = Label(f"1/{n_pages}", style=Pack(flex=1))
         self.next_page_button = Button(
-            "próximo", style=style.RIGHTMOST_SIMPLE_SMALL_BUTTON
+            "próximo", style=style.RIGHTMOST_SIMPLE_SMALL_BUTTON, on_press=self.set_next_page
         )
-        self.previous_page_button = Button("anterior", style=style.SIMPLE_SMALL_BUTTON)
+        self.previous_page_button = Button("anterior", style=style.SIMPLE_SMALL_BUTTON, on_press=self.set_previous_page)
         self.pagination_widget = Row(
             style=Pack(align_items="center"),
             children=[
@@ -47,6 +56,20 @@ class InputPaginator:
     @property
     def current_data(self) -> dict:
         return dict(getattr(self, "_current_data", {}))
+
+    @current_data.setter
+    def current_data(self, value: dict):
+        self._data[self._current_page - 1] = value
+
+    @property
+    def on_page_change(self) -> Callable[[], None]:
+        def no_op():
+            return
+        return getattr(self, "_on_page_change", no_op)
+
+    @on_page_change.setter
+    def on_page_change(self, value: Callable[[], None]):
+        self._on_page_change = value
 
     @property
     def n_pages(self) -> int:
@@ -74,11 +97,12 @@ class InputPaginator:
         else:
             self._current_page = n
         self._update_state()
+        self.on_page_change()
 
-    def set_next_page(self):
-        self.set_page(n=self._curent_page + 1)
+    def set_next_page(self, widget: Button | None = None):
+        self.set_page(n=self._current_page + 1)
 
-    def set_previous_page(self):
+    def set_previous_page(self, widget: Button | None = None):
         self.set_page(n=self._current_page - 1)
 
     def set_page_amount(self, n: int):
