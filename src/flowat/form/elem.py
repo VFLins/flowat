@@ -60,9 +60,8 @@ class FormField(Box):
             id=f"{id}_label" if id else f"{label}_label",
             style=style.input_annotation(),
         )
-        input_widget.style = (
-            Pack() if unstyled else style.user_input(type(input_widget))
-        )
+        if not unstyled:
+            input_widget.style = style.user_input(type(input_widget))
         self.contents = Column(
             id=id if id else label,
             children=[label_widget, input_widget],
