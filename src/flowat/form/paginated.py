@@ -25,16 +25,21 @@ class InputPaginator:
             self._data = [{}]
         self._current_page = 1
         self._current_data = self._data[0]
-        self.pagination_label = Label(f"1/{n_pages}")
-        self.next_page_button = Button("próximo", style=style.SIMPLE_SMALL_BUTTON)
+        self.pagination_label = Label(f"1/{n_pages}", style=Pack(flex=1))
+        self.next_page_button = Button("próximo", style=style.RIGHTMOST_SIMPLE_SMALL_BUTTON)
         self.previous_page_button = Button("anterior", style=style.SIMPLE_SMALL_BUTTON)
-        self.widget = Row(
+        self.pagination_widget = Row(
             style=Pack(align_items="center"),
             children=[
                 self.pagination_label,
                 self.previous_page_button,
                 self.next_page_button,
             ]
+        )
+        self.placeholder_widget = Row()
+        self.widget = Column(
+            style=Pack(width=style.FORM_WIDTH, align_items="end"),
+            children=[self.placeholder_widget]
         )
 
     @property
@@ -48,6 +53,12 @@ class InputPaginator:
     def _update_state(self):
         self.pagination_label.text = f"{self._current_page}/{self.n_pages}"
         self._current_data = self._data[self._current_page - 1]
+        if self.n_pages > 1:
+            self.widget.remove(self.placeholder_widget)
+            self.widget.add(self.pagination_widget)
+        else:
+            self.widget.remove(self.pagination_widget)
+            self.widget.add(self.placeholder_widget)
 
     def set_page(self, n: int):
         """Updates current page data and pagination label accordingly. Will set last
