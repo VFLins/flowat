@@ -80,7 +80,10 @@ class ExpensesSection(BaseSection):
             style=Pack(flex=1), value=2, min=2, max=120, step=1
         )
         # expense_form's initial data:
-        self.paginator = InputPaginator(on_page_change=self._on_form_page_change)
+        self.paginator = InputPaginator(
+            pagination_label="Parcela",
+            on_page_change=self._on_form_page_change
+        )
         self.expenses_source.sort_ascending = False
         self._refresh_displayed_data()
 
@@ -345,9 +348,12 @@ class ExpensesSection(BaseSection):
     def _on_form_page_change(self):
         """Actions performed when the user navigates the expense form pages."""
         data = self.paginator.current_data
+        if not data:
+            return
         # type
         type_field: Selection = self._app.widgets["expense_form_type"]
         type_map = {str(id): name for id, name in self.expense_type_source.current_data}
+        type_returned = data.get
         type_field.value = type_map[str(data["type"])]
         # description
         self._app.widgets["expense_form_description"].input.value = data["description"]

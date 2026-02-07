@@ -1,6 +1,7 @@
 from datetime import date
 from dateutil.relativedelta import relativedelta
 from typing import Any, Callable
+from sys import platform
 
 from toga.widgets.button import Button
 from toga.widgets.label import Label
@@ -16,6 +17,7 @@ class InputPaginator:
         self,
         data: dict[str, Any] | None = None,
         n_pages: int = 1,
+        pagination_label: str = "",
         on_page_change: Callable[[], None] | None = None,
     ):
         """Assigns a `toga.Box` with pagination widgets to it's `widget` property.
@@ -23,6 +25,7 @@ class InputPaginator:
 
         :data: Initial input of all pages.
         :n_pages: Initial amount of input sets handled.
+        :pagination_label: Text displayed in the pagination widgets.
         :on_page_change: Callable indicating actions to be performed when the user
             interacts with any pagination widget.
         """
@@ -30,15 +33,16 @@ class InputPaginator:
             self._data = [data for i in range(n_pages)]
         else:
             self._data = [{}]
+        self._pagination_label = pagination_label
         if on_page_change is not None:
             self._on_page_change = on_page_change
         self._current_page = 1
         self._current_data = self._data[0]
-        self.pagination_label = Label(f"1/{n_pages}", style=Pack(flex=1))
+        self.pagination_label = Label(f"{pagination_label} 1/{n_pages}")
         self.next_page_button = Button(
-            "próximo", style=style.RIGHTMOST_SIMPLE_SMALL_BUTTON, on_press=self.set_next_page
+            "→", style=style.RIGHTMOST_SIMPLE_SMALL_BUTTON, on_press=self.set_next_page
         )
-        self.previous_page_button = Button("anterior", style=style.SIMPLE_SMALL_BUTTON, on_press=self.set_previous_page)
+        self.previous_page_button = Button("←", style=style.SIMPLE_SMALL_BUTTON, on_press=self.set_previous_page)
         self.pagination_widget = Row(
             style=Pack(align_items="center"),
             children=[
@@ -47,7 +51,7 @@ class InputPaginator:
                 self.next_page_button,
             ],
         )
-        self.placeholder_widget = Row()
+        self.placeholder_widget = Row(style=Pack(height=38 if platform=="linux" else 28))
         self.widget = Column(
             style=Pack(width=style.FORM_WIDTH, align_items="end"),
             children=[self.placeholder_widget],
@@ -76,7 +80,7 @@ class InputPaginator:
         return len(self._data)
 
     def _update_state(self):
-        self.pagination_label.text = f"{self._current_page}/{self.n_pages}"
+        self.pagination_label.text = f"{self._pagination_label} {self._current_page}/{self.n_pages}"
         self._current_data = self._data[self._current_page - 1]
         if self.n_pages > 1:
             self.widget.remove(self.placeholder_widget)
