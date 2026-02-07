@@ -140,7 +140,7 @@ class ExpensesSection(BaseSection):
                     children=[
                         self.expenses_list_annotation,
                         Button("anterior", style=style.SIMPLE_SMALL_BUTTON),
-                        Button("próximo", style=style.SIMPLE_SMALL_BUTTON),
+                        Button("próximo", style=style.RIGHTMOST_SIMPLE_SMALL_BUTTON),
                     ],
                 ),
             ],
@@ -162,14 +162,9 @@ class ExpensesSection(BaseSection):
                     label="Descrição",
                     unstyled=True,
                 ),
-                Row(
-                    id="expense_form_recurrency_container",
-                    style=Pack(align_items="end", width=style.FORM_WIDTH),
-                    children=[self.recurring_expense_switch],
-                ),
                 FormField(
                     id="expense_form_barcode",
-                    input_widget=TextInput(),
+                    input_widget=TextInput(on_change=self._on_form_update),
                     label="Código de barras",
                     unstyled=True,
                 ),
@@ -177,15 +172,21 @@ class ExpensesSection(BaseSection):
                 FormField(
                     id="expense_form_value",
                     input_widget=TextInput(
-                        placeholder="0,00", on_change=self._on_form_update
+                        style=Pack(width=90), placeholder="0,00", on_change=self._on_form_update
                     ),
                     label="Valor",
                     unstyled=True,
+                ),
+                Row(
+                    id="expense_form_recurrency_container",
+                    style=Pack(align_items="end", width=style.FORM_WIDTH),
+                    children=[self.recurring_expense_switch],
                 ),
                 self.paginator.widget,
                 Row(
                     style=Pack(align_items="end"),
                     children=[
+                        Box(style=Pack(flex=1)), # push buttons to the right side
                         Button(
                             "Voltar",
                             style=style.SIMPLE_BUTTON,
@@ -194,7 +195,7 @@ class ExpensesSection(BaseSection):
                         Button(
                             "Inserir",
                             id="expense_form_confirm",
-                            style=style.SIMPLE_BUTTON,
+                            style=style.RIGHTMOST_SIMPLE_BUTTON,
                             enabled=False,
                             on_press=self.add_expense,
                         ),
