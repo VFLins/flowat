@@ -35,7 +35,6 @@ from copy import copy
 from sys import platform
 import re
 
-
 if platform == "win32":
     FLOWAT_FILES_PATH = Path.home().joinpath("AppData", "Local", "Flowat")
     CONFIG_PATH = Path(FLOWAT_FILES_PATH, "configs")

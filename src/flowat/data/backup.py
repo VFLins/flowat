@@ -10,7 +10,6 @@ import shutil
 from .db import DB_FILE, DATA_PATH
 from flowat import config
 
-
 if platform == "win32":
     FLOWAT_FILES_PATH = Path.home().joinpath("AppData", "Local", "Flowat")
     CONFIG_PATH = Path(FLOWAT_FILES_PATH, "configs")

@@ -69,11 +69,9 @@ class _DataSource:
         selected_colnames = select_stmt.selected_columns.keys()
         for col in search_colnames:
             if col not in selected_colnames:
-                raise ValueError(
-                    f"Expected all `search_colnames` to be present in {
+                raise ValueError(f"Expected all `search_colnames` to be present in {
                         selected_colnames
-                    }."
-                )
+                    }.")
         self.SEARCH_COLNAMES = search_colnames
         if paginated:
             self._current_page = 1

@@ -172,7 +172,9 @@ class ExpensesSection(BaseSection):
                 FormField(
                     id="expense_form_value",
                     input_widget=TextInput(
-                        style=Pack(width=90), placeholder="0,00", on_change=self._on_form_update
+                        style=Pack(width=90),
+                        placeholder="0,00",
+                        on_change=self._on_form_update,
                     ),
                     label="Valor",
                     unstyled=True,
@@ -186,7 +188,7 @@ class ExpensesSection(BaseSection):
                 Row(
                     style=Pack(align_items="end"),
                     children=[
-                        Box(style=Pack(flex=1)), # push buttons to the right side
+                        Box(style=Pack(flex=1)),  # push buttons to the right side
                         Button(
                             "Voltar",
                             style=style.SIMPLE_BUTTON,
