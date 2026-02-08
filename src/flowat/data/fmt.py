@@ -1,6 +1,16 @@
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from typing import Any
 
 from flowat import config
+
+
+class _Parser:
+    def __init__(self, formatted_value: Any):
+        self._formatted_value = formatted_value
+
+    @property
+    def presumed_input(self):
+        return str(self._formatted_value)
 
 
 class _Formatter:
@@ -15,13 +25,19 @@ class _Formatter:
             return ""
 
     @property
-    def invalid_reason(self) -> str:
+    def invalid_reason(self) -> str | None:
         if not self._user_input:
             return f"'{self._field_name}' não pode ser vazio"
 
     def is_valid(self) -> bool:
         """Verify if the integer is a valid input for currency."""
         return self.invalid_reason is None
+
+
+class CurrencyToString(_Parser):
+    @property
+    def presumed_input(self) -> str:
+        return f"{self._formatted_value / 100}".replace(".", ",")
 
 
 class StringToCurrency(_Formatter):

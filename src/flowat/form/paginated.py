@@ -13,7 +13,7 @@ from flowat.data import db
 class InputPaginator:
     def __init__(
         self,
-        data: Type[db.ExpenseEntry] | None = None,
+        data: Type[db.DeclaredTable] | None = None,
         n_pages: int = 1,
         pagination_label: str = "",
         on_page_change: Callable[[], None] | None = None,
@@ -60,11 +60,12 @@ class InputPaginator:
         )
 
     @property
-    def current_data(self) -> dict:
+    def current_data(self) -> Type[db.DeclaredTable] | None:
         return getattr(self, "_current_data", None)
 
     @current_data.setter
-    def current_data(self, value: dict):
+    def current_data(self, value: Type[db.DeclaredTable]):
+        self._current_data = value
         self._data[self._current_page - 1] = value
 
     @property

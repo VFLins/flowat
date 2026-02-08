@@ -39,6 +39,16 @@ class ExpensesSection(BaseSection):
             style=Pack(width=515, height=160),
             on_webview_load=self._on_reload_plot,
         )
+        self.expense_type_input = Selection(
+            items=[r.Name for r in self.expense_type_source.current_data],
+        )
+        self.description_input = TextInput(on_change=self._on_form_update)
+        self.barcode_input = TextInput(on_change=self._on_form_update)
+        self.value_input = TextInput(
+            style=Pack(width=int(style.FORM_WIDTH / 3)),
+            placeholder="0,00",
+            on_change=self._on_form_update,
+        )
         self.date_input = HorizontalDateForm(
             id="expense_form_duedate", value=date.today()
         )
@@ -146,32 +156,26 @@ class ExpensesSection(BaseSection):
             children=[
                 FormField(
                     id="expense_form_type",
-                    input_widget=Selection(
-                        items=[r.Name for r in self.expense_type_source.current_data],
-                    ),
+                    input_widget=self.expense_type_input,
                     label="Categoria",
                     unstyled=True,
                 ),
                 FormField(
                     id="expense_form_description",
-                    input_widget=TextInput(on_change=self._on_form_update),
+                    input_widget=self.description_input,
                     label="Descrição",
                     unstyled=True,
                 ),
                 FormField(
                     id="expense_form_barcode",
-                    input_widget=TextInput(on_change=self._on_form_update),
+                    input_widget=self.barcode_input,
                     label="Código de barras",
                     unstyled=True,
                 ),
                 self.date_input.widget,
                 FormField(
                     id="expense_form_value",
-                    input_widget=TextInput(
-                        style=Pack(width=90),
-                        placeholder="0,00",
-                        on_change=self._on_form_update,
-                    ),
+                    input_widget=self.value_input,
                     label="Valor",
                     unstyled=True,
                 ),
@@ -282,19 +286,14 @@ class ExpensesSection(BaseSection):
     def _get_expense_form_entry(self) -> db.ExpenseEntry:
         type_field: Selection = self._app.widgets["expense_form_type"]
         type_map = {name: id for id, name in self.expense_type_source.current_data}
-        barcode_fmt = fmt.StringToBarcodeITF25(
-            user_input=self._app.widgets["expense_form_barcode"].input.value,
-            field_name="Código de Barra",
-        )
         value_fmt = fmt.StringToCurrency(
             user_input=self._app.widgets["expense_form_value"].input.value,
             field_name="Valor",
         )
         return db.ExpenseEntry(
             IdExpenseType=type_map[type_field.input.value],
-            TimeStamp=datetime.now(),
-            Description=self._app.widgets["expense_form_description"].input.value,
-            Barcode=barcode_fmt.value,
+            Description=self.description_input.value,
+            Barcode=self.barcode_input.value,
             TransactionDate=self.date_input.value,
             TransactionValue=value_fmt.value,
         )
@@ -303,9 +302,11 @@ class ExpensesSection(BaseSection):
         """Actions performed when the user interacts with any input in the expense
         form.
         """
-        expense = self._get_expense_form_entry()
-        self.paginator.current_data: db.ExpenseEntry = expense
-        if expense.required_fields_are_filled():
+        self.paginator.current_data = self._get_expense_form_entry()
+        all_expenses_valid = all(
+            e.required_fields_are_filled() for e in self.paginator._data
+        )
+        if all_expenses_valid:
             self._app.widgets["expense_form_confirm"].enabled = True
             self.recurring_expense_switch.enabled = True
         else:
@@ -334,7 +335,12 @@ class ExpensesSection(BaseSection):
 
     def _on_form_page_change(self):
         """Actions performed when the user navigates the expense form pages."""
-        self.paginator.current_data = self._get_expense_form_entry()
+        d: db.ExpenseEntry = self.paginator.current_data
+        currency_value = fmt.CurrencyToString(formatted_value=d.TransactionValue)
+        self.description_input.value = d.Description
+        self.barcode_input.value = d.Barcode
+        self.value_input.value = currency_value.presumed_input
+        self.date_input.value = d.TransactionDate
 
     def _refresh_displayed_data(self):
         """Refreshes data displayed in the summary section from both plot and table."""
@@ -402,17 +408,16 @@ class ExpensesSection(BaseSection):
     def _clear_expense_form(self):
         """Resets expense form fields to their default values."""
         # expense type
-        type_field = self._app.widgets["expense_form_type"]
         type_data = self.expense_type_source.current_data
-        type_field.value = type_data[0].Name if bool(type_data) else ""
+        self.expense_type_input.value = type_data[0].Name if bool(type_data) else ""
         # description
-        self._app.widgets["expense_form_description"].input.value = ""
+        self.description_input.value = ""
         # barcode
-        self._app.widgets["expense_form_barcode"].input.value = ""
+        self.barcode_input.value = ""
         # date
         self.date_input.value = date.today()
         # value
-        self._app.widgets["expense_form_value"].input.value = ""
+        self.value_input.value = ""
 
     def _ensure_expense_types(self):
         expense_categories = [

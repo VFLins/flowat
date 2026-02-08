@@ -272,11 +272,14 @@ class ExpenseEntry(DeclaredTable):
     TransactionValue = Column("TransactionValue", CurrencyAmount, nullable=False)
 
     def __repr__(self) -> str:
+        value = getattr(self, "TransactionValue", 0)
+        if value is None:
+            value = 0
         return (
             f"{self.Description}\n"
             f"    Criado: {self.TimeStamp}\n"
             f"    Código de barras: {self.Barcode}\n"
-            f"    Valor: R$ {self.TransactionValue:.2f}\n"
+            f"    Valor: R$ {value:.2f}\n"
             f"    Vencimento: {self.TransactionDate}"
         )
 
