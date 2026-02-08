@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Callable
 from dateutil.relativedelta import relativedelta
 
 from toga.widgets.numberinput import NumberInput
@@ -26,7 +27,13 @@ class HorizontalDateForm:
         "Dezembro",
     )
 
-    def __init__(self, value: date = date.today(), id: str | None = None):
+    def __init__(
+        self,
+        value: date = date.today(),
+        id: str | None = None,
+        on_change: Callable[[], None] | None = None,
+    ):
+        self.on_change = on_change
         self.year_container = FormField(
             label="Ano",
             input_widget=NumberInput(min=1, max=9999, value=value.year),
@@ -49,6 +56,21 @@ class HorizontalDateForm:
             id=id,
             children=[self.day_container, self.month_container, self.year_container],
         )
+
+    @property
+    def on_change(self) -> Callable[[], None]:
+        if self._on_change_call is None:
+
+            def no_op():
+                return
+
+            return no_op
+        else:
+            return self._on_change_call
+
+    @on_change.setter
+    def on_change(self, call: Callable[[], None] | None):
+        self._on_change_call = call
 
     @property
     def value(self):

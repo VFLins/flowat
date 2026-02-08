@@ -1,4 +1,4 @@
-from typing import Callable, Type
+from typing import Callable
 from sys import platform
 
 from toga.widgets.button import Button
@@ -13,7 +13,7 @@ from flowat.data import db
 class InputPaginator:
     def __init__(
         self,
-        data: Type[db.DeclaredTable] | None = None,
+        data: db.DeclaredTable | None = None,
         n_pages: int = 1,
         pagination_label: str = "",
         on_page_change: Callable[[], None] | None = None,
@@ -35,7 +35,6 @@ class InputPaginator:
         if on_page_change is not None:
             self._on_page_change = on_page_change
         self._current_page = 1
-        self._current_data = self._data[0]
         self.pagination_label = Label(f"{pagination_label} 1/{n_pages}")
         self.next_page_button = Button(
             "→", style=style.RIGHTMOST_SIMPLE_SMALL_BUTTON, on_press=self.set_next_page
@@ -60,12 +59,11 @@ class InputPaginator:
         )
 
     @property
-    def current_data(self) -> Type[db.DeclaredTable] | None:
-        return getattr(self, "_current_data", None)
+    def current_data(self) -> db.DeclaredTable | None:
+        return self._data[self._current_page - 1]
 
     @current_data.setter
-    def current_data(self, value: Type[db.DeclaredTable]):
-        self._current_data = value
+    def current_data(self, value: db.DeclaredTable):
         self._data[self._current_page - 1] = value
 
     @property

@@ -50,7 +50,9 @@ class ExpensesSection(BaseSection):
             on_change=self._on_form_update,
         )
         self.date_input = HorizontalDateForm(
-            id="expense_form_duedate", value=date.today()
+            id="expense_form_duedate",
+            value=date.today(),
+            on_change=self._on_form_update,
         )
         self.expenses_list = Table(
             style=Pack(flex=1),
@@ -73,7 +75,7 @@ class ExpensesSection(BaseSection):
         )
         self.recurring_expense_switch = Switch(
             "Gasto em parcelas",
-            style=Pack(margin=(15, 20, 0, 5), width=style.FORM_WIDTH / 2),
+            style=Pack(margin=(15, 20, 0, 5), width=int(style.FORM_WIDTH / 2)),
             enabled=False,
             on_change=self._on_change_recurring_expense_switch,
         )
@@ -292,6 +294,7 @@ class ExpensesSection(BaseSection):
         )
         return db.ExpenseEntry(
             IdExpenseType=type_map[type_field.input.value],
+            TimeStamp=datetime.now(),
             Description=self.description_input.value,
             Barcode=self.barcode_input.value,
             TransactionDate=self.date_input.value,
