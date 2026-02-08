@@ -1,6 +1,4 @@
-from datetime import date
-from dateutil.relativedelta import relativedelta
-from typing import Any, Callable
+from typing import Callable, Type
 from sys import platform
 
 from toga.widgets.button import Button
@@ -9,13 +7,13 @@ from toga.widgets.box import Row, Column
 from toga.style import Pack
 
 from flowat.const import style
-from flowat.form.elem import FormField
+from flowat.data import db
 
 
 class InputPaginator:
     def __init__(
         self,
-        data: dict[str, Any] | None = None,
+        data: Type[db.ExpenseEntry] | None = None,
         n_pages: int = 1,
         pagination_label: str = "",
         on_page_change: Callable[[], None] | None = None,
@@ -42,7 +40,9 @@ class InputPaginator:
         self.next_page_button = Button(
             "→", style=style.RIGHTMOST_SIMPLE_SMALL_BUTTON, on_press=self.set_next_page
         )
-        self.previous_page_button = Button("←", style=style.SIMPLE_SMALL_BUTTON, on_press=self.set_previous_page)
+        self.previous_page_button = Button(
+            "←", style=style.SIMPLE_SMALL_BUTTON, on_press=self.set_previous_page
+        )
         self.pagination_widget = Row(
             style=Pack(align_items="center"),
             children=[
@@ -51,7 +51,9 @@ class InputPaginator:
                 self.next_page_button,
             ],
         )
-        self.placeholder_widget = Row(style=Pack(height=38 if platform=="linux" else 28))
+        self.placeholder_widget = Row(
+            style=Pack(height=38 if platform == "linux" else 28)
+        )
         self.widget = Column(
             style=Pack(width=style.FORM_WIDTH, align_items="end"),
             children=[self.placeholder_widget],
@@ -59,7 +61,7 @@ class InputPaginator:
 
     @property
     def current_data(self) -> dict:
-        return dict(getattr(self, "_current_data", {}))
+        return getattr(self, "_current_data", None)
 
     @current_data.setter
     def current_data(self, value: dict):
@@ -69,6 +71,7 @@ class InputPaginator:
     def on_page_change(self) -> Callable[[], None]:
         def no_op():
             return
+
         return getattr(self, "_on_page_change", no_op)
 
     @on_page_change.setter
@@ -80,7 +83,9 @@ class InputPaginator:
         return len(self._data)
 
     def _update_state(self):
-        self.pagination_label.text = f"{self._pagination_label} {self._current_page}/{self.n_pages}"
+        self.pagination_label.text = (
+            f"{self._pagination_label} {self._current_page}/{self.n_pages}"
+        )
         self._current_data = self._data[self._current_page - 1]
         if self.n_pages > 1:
             self.widget.remove(self.placeholder_widget)

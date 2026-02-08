@@ -15,8 +15,6 @@ from toga.style import Pack
 
 from datetime import date, datetime
 import asyncio
-from typing import TypedDict
-from sys import platform
 
 from .base import BaseSection
 
@@ -24,16 +22,8 @@ from flowat.const import style, icon
 from flowat.data import db, source, fmt
 from flowat.plot.bar import colplot
 from flowat.form.date import HorizontalDateForm
-from flowat.form.elem import FormField, Heading
+from flowat.form.elem import FormField
 from flowat.form.paginated import InputPaginator
-
-
-class ExpenseData(TypedDict):
-    type: int
-    description: str
-    barcode: str
-    date: date
-    value: int
 
 
 class ExpensesSection(BaseSection):
@@ -74,6 +64,7 @@ class ExpensesSection(BaseSection):
         self.recurring_expense_switch = Switch(
             "Gasto em parcelas",
             style=Pack(margin=(15, 20, 0, 5), width=style.FORM_WIDTH / 2),
+            enabled=False,
             on_change=self._on_change_recurring_expense_switch,
         )
         self.recurring_expense_amount = NumberInput(
@@ -81,8 +72,9 @@ class ExpensesSection(BaseSection):
         )
         # expense_form's initial data:
         self.paginator = InputPaginator(
+            data=db.ExpenseEntry(),
             pagination_label="Parcela",
-            on_page_change=self._on_form_page_change
+            on_page_change=self._on_form_page_change,
         )
         self.expenses_source.sort_ascending = False
         self._refresh_displayed_data()
@@ -312,18 +304,13 @@ class ExpensesSection(BaseSection):
         form.
         """
         expense = self._get_expense_form_entry()
-        self.paginator.current_data: ExpenseData = {
-            "type": expense.IdExpenseType,
-            "description": expense.Description,
-            "barcode": expense.Barcode,
-            "date": expense.TransactionDate,
-            "value": expense.TransactionValue,
-        }
-        print(self.paginator._data)
+        self.paginator.current_data: db.ExpenseEntry = expense
         if expense.required_fields_are_filled():
             self._app.widgets["expense_form_confirm"].enabled = True
+            self.recurring_expense_switch.enabled = True
         else:
             self._app.widgets["expense_form_confirm"].enabled = False
+            self.recurring_expense_switch.enabled = False
 
     def _on_search_update(self, widget: TextInput):
         """Actions performed when the user interacts with the search bar in the expense
@@ -340,29 +327,14 @@ class ExpensesSection(BaseSection):
         container = self._app.widgets["expense_form_recurrency_container"]
         if widget.value:
             container.add(self.recurring_expense_amount)
-            self.paginator.set_page_amount(self.recurring_expense_amount.value)
+            self.paginator.set_page_amount(int(self.recurring_expense_amount.value))
         else:
             container.remove(self.recurring_expense_amount)
             self.paginator.set_page_amount(1)
 
     def _on_form_page_change(self):
         """Actions performed when the user navigates the expense form pages."""
-        data = self.paginator.current_data
-        if not data:
-            return
-        # type
-        type_field: Selection = self._app.widgets["expense_form_type"]
-        type_map = {str(id): name for id, name in self.expense_type_source.current_data}
-        type_returned = data.get
-        type_field.value = type_map[str(data["type"])]
-        # description
-        self._app.widgets["expense_form_description"].input.value = data["description"]
-        # barcode
-        self._app.widgets["expense_form_barcode"].input.value = data["barcode"]
-        # date
-        self.date_input.value = data["date"]
-        # value
-        self._app.widgets["expense_form_value"].input.value = data["value"]
+        self.paginator.current_data = self._get_expense_form_entry()
 
     def _refresh_displayed_data(self):
         """Refreshes data displayed in the summary section from both plot and table."""
