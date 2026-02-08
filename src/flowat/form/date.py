@@ -37,7 +37,12 @@ class HorizontalDateForm:
         self._on_change_call = on_change
         self.year_container = FormField(
             label="Ano",
-            input_widget=NumberInput(min=1, max=9999, value=value.year, on_change=self._update_allowed_day_values),
+            input_widget=NumberInput(
+                min=1,
+                max=9999,
+                value=value.year,
+                on_change=self._update_allowed_day_values,
+            ),
         )
         self.month_container = FormField(
             label="Mês",
@@ -50,7 +55,10 @@ class HorizontalDateForm:
         self.day_container = FormField(
             label="Dia",
             input_widget=NumberInput(
-                min=1, max=self._last_day_of_month(), value=value.day, on_change=on_change
+                min=1,
+                max=self._last_day_of_month(),
+                value=value.day,
+                on_change=on_change,
             ),
         )
         self.widget = Row(
