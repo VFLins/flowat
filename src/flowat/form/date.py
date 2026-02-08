@@ -4,6 +4,7 @@ from dateutil.relativedelta import relativedelta
 
 from toga.widgets.numberinput import NumberInput
 from toga.widgets.selection import Selection
+from toga.widgets.base import Widget
 from toga.widgets.box import Row, Column
 from toga.style import Pack
 
@@ -31,12 +32,12 @@ class HorizontalDateForm:
         self,
         value: date = date.today(),
         id: str | None = None,
-        on_change: Callable[[], None] | None = None,
+        on_change: Callable[[Widget], None] | None = None,
     ):
-        self.on_change = on_change
+        self._on_change_call = on_change
         self.year_container = FormField(
             label="Ano",
-            input_widget=NumberInput(min=1, max=9999, value=value.year),
+            input_widget=NumberInput(min=1, max=9999, value=value.year, on_change=self._update_allowed_day_values),
         )
         self.month_container = FormField(
             label="Mês",
@@ -49,7 +50,7 @@ class HorizontalDateForm:
         self.day_container = FormField(
             label="Dia",
             input_widget=NumberInput(
-                min=1, max=self._last_day_of_month(), value=value.day
+                min=1, max=self._last_day_of_month(), value=value.day, on_change=on_change
             ),
         )
         self.widget = Row(
@@ -58,10 +59,10 @@ class HorizontalDateForm:
         )
 
     @property
-    def on_change(self) -> Callable[[], None]:
+    def on_change(self) -> Callable[[Widget], None]:
         if self._on_change_call is None:
 
-            def no_op():
+            def no_op(widget: Widget):
                 return
 
             return no_op
@@ -69,7 +70,8 @@ class HorizontalDateForm:
             return self._on_change_call
 
     @on_change.setter
-    def on_change(self, call: Callable[[], None] | None):
+    def on_change(self, call: Callable[[Widget], None] | None):
+        self.day_container.on_change = call
         self._on_change_call = call
 
     @property
@@ -95,6 +97,7 @@ class HorizontalDateForm:
         if self.day_container.input.value > max_day:
             self.day_container.input.value = max_day
         self.day_container.input.max = max_day
+        self.on_change(widget=widget)
 
     def _month_number(self) -> int:
         """Returns the month number 1-12 of the currently selected month."""
