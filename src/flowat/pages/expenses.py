@@ -80,7 +80,7 @@ class ExpensesSection(BaseSection):
             on_change=self._on_change_recurring_expense_switch,
         )
         self.recurring_expense_amount = NumberInput(
-            style=Pack(flex=1), value=2, min=2, max=120, step=1
+            style=Pack(flex=1), value=2, min=2, max=120, step=1, on_change=self._on_change_recurring_expense_amount
         )
         # expense_form's initial data:
         self.paginator = InputPaginator(
@@ -335,6 +335,13 @@ class ExpensesSection(BaseSection):
         else:
             container.remove(self.recurring_expense_amount)
             self.paginator.set_page_amount(1)
+
+    def _on_change_recurring_expense_amount(self, widget: NumberInput):
+        """Actions performed when the user changes the amount of pages after activating
+        the "Monthly expense" switch.
+        """
+        n_pages = self.recurring_expense_amount.value
+        self.paginator.set_page_amount(n=n_pages)
 
     def _on_form_page_change(self):
         """Actions performed when the user navigates the expense form pages."""
