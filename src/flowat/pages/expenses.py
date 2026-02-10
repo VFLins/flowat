@@ -231,10 +231,13 @@ class ExpensesSection(BaseSection):
         """Prompts to user to confirm the inserted data, in the positive case, writes
         to the database. Does nothing otherwise.
         """
-        expense = self._get_expense_form_entry()
-        # TODO: Add confirmation dialog. Should check if a similar transaction was
-        # added before (type, value and date), and warn the user.
-        expense.write()
+        # TODO: Add confirmation dialog:
+        # 1. Check if a similar transaction was added before (type, value and date),
+        #    and warn the user.
+        # 2. Verify all expenses data visually before writting to the database.
+        for expense in self.paginator._data:
+            expense.TimeStamp = datetime.now()
+            expense.write()
         self._clear_expense_form()
         self._refresh_displayed_data()
         self.show_main_content(widget=widget)
@@ -341,7 +344,7 @@ class ExpensesSection(BaseSection):
         the "Monthly expense" switch.
         """
         n_pages = self.recurring_expense_amount.value
-        self.paginator.set_page_amount(n=n_pages)
+        self.paginator.set_page_amount(n=int(n_pages))
 
     def _on_form_page_change(self):
         """Actions performed when the user navigates the expense form pages."""
@@ -428,6 +431,9 @@ class ExpensesSection(BaseSection):
         self.date_input.value = date.today()
         # value
         self.value_input.value = ""
+        # recurrency widgets
+        self.recurring_expense_amount.value = 2
+        self.recurring_expense_switch.value = False
 
     def _ensure_expense_types(self):
         expense_categories = [
