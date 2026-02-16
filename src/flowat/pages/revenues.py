@@ -1,3 +1,4 @@
+from toga.widgets.activityindicator import ActivityIndicator
 from toga.widgets.imageview import ImageView
 from toga.widgets.selection import Selection
 from toga.widgets.textinput import TextInput
@@ -6,11 +7,13 @@ from toga.widgets.button import Button
 from toga.widgets.table import Table
 from toga.widgets.label import Label
 from toga.widgets.box import Box, Column, Row
-from toga.dialogs import InfoDialog, ConfirmDialog
+from toga.widgets.optioncontainer import OptionContainer
+from toga.dialogs import InfoDialog, ConfirmDialog, SelectFolderDialog
 from toga.style import Pack
 
 from datetime import date, datetime
 import asyncio
+import nflogic
 
 from .base import BaseSection
 
@@ -54,8 +57,9 @@ class RevenuesSection(BaseSection):
             style=style.SIMPLE_SQUARE_BUTTON,
             on_press=self.rm_revenue,
         )
+        self.scan_activity = ActivityIndicator()
+        self.scan_info = Label(text="")
         self.revenues_source.sort_ascending = False
-        self._refresh_displayed_data()
 
         self.first_interaction = Column(
             style=style.CENTERED_MAIN_CONTAINER,
@@ -115,8 +119,8 @@ class RevenuesSection(BaseSection):
                 ),
             ],
         )
-        self.revenue_form = Column(
-            style=style.FORM_CONTAINER,
+        self.revenue_input_form = Column(
+            style=Pack(width=style.FORM_WIDTH),
             children=[
                 FormField(
                     id="revenue_form_type",
@@ -159,6 +163,28 @@ class RevenuesSection(BaseSection):
                 ),
             ],
         )
+        self.revenue_scan_form = Column(
+            style=style.FORM_CONTAINER,
+            children=[
+                ImageView(
+                    image=icon.SCANNER_IMG,
+                    style=Pack(margin=20, width=96, height=96),
+                ),
+                Button(
+                    text="Escanear uma pasta",
+                    style=style.user_input(Button),
+                    on_press=self.nflogic_scan,
+                ),
+                Row(children=[self.scan_activity, self.scan_info]),
+            ],
+        )
+        self.revenue_form = OptionContainer(
+            style=style.MAIN_CONTAINER,
+            content=[
+                ("Inserção manual", self.revenue_input_form),
+                ("Escanear notas de venda", self.revenue_scan_form),
+            ],
+        )
         self.main_container = Box(
             style=style.CENTERED_MAIN_CONTAINER,
             children=[self.first_interaction],
@@ -173,7 +199,6 @@ class RevenuesSection(BaseSection):
         add a new revenue.
         """
         self.main_container.clear()
-        self.main_container.style = style.FORM_CONTAINER
         self.main_container.add(self.revenue_form)
 
     def show_main_content(self, widget: Button | None = None):
@@ -206,8 +231,8 @@ class RevenuesSection(BaseSection):
         self.show_main_content(widget=widget)
 
     def rm_revenue(self, widget: Button):
-        """Prompts the user to confirm removal of the selected revenue, in the positive
-        case, removes transaction from the database. Does nothing otherwise.
+        """Prompts the user to confirm removal of the selected revenue. Calls
+        `self.rm_revenue_response` to handle the user's response.
         """
         confirm_dialog = ConfirmDialog(
             "Excluir esta receita?", str(self.SELECTED_REVENUE)
@@ -216,10 +241,46 @@ class RevenuesSection(BaseSection):
         task.add_done_callback(self.rm_revenue_response)
 
     def rm_revenue_response(self, task: asyncio.Task):
+        """Handles user's response to the dialog invoked by `self.rm_revenue`."""
         if task.result():
             self.SELECTED_REVENUE.delete()
             self._refresh_displayed_data()
             self.show_main_content()
+
+    def nflogic_scan(self, widget: Button):
+        """Prompts the user to select a directory to be scanned for revenue documents.
+        Calls `self.nflogic_scan_response` to handle the user's response.
+        """
+        dir_dialog = SelectFolderDialog(
+            title="Selecione a pasta com os documentos fiscais (NFe)"
+        )
+        task = asyncio.create_task(self._app.main_window.dialog(dir_dialog))
+        task.add_done_callback(self.nflogic_scan_response)
+
+    def nflogic_scan_response(self, task: asyncio.Task):
+        """Handles user's response to the dialog invoked by `self.nflogic_scan`."""
+        result = task.result()
+        print(f"INFO: User selected directory for scanning: {result}")
+        if not result:
+            return
+        # xml files in the directory
+        dir_files = nflogic.xml_files_in_dir(dir_path=result)
+        # number of files that will be processed
+        n_new_files = len(
+            list(
+                nflogic.api.cache.get_not_processed_inputs(
+                    filepaths=dir_files, buy=False, ignore_fails=True, full_parse=False
+                )
+            )
+        )
+        if n_new_files == 0:
+            self.scan_info.text = "Nenhum arquivo novo e válido para processar."
+        else:
+            self.scan_activity.start()
+            self.scan_info.text = f"Processendo {n_new_files} arquivos..."
+            nflogic.parse_dir(dir_path=result, buy=False, full_parse=False)
+            self.scan_activity.stop()
+            self.scan_info.text = "Concluído!"
 
     def change_sorting(self, widget: Button):
         sort_options = ["Adic. ↓", "Adic. ↑", "Venc. ↓", "Venc. ↑"]

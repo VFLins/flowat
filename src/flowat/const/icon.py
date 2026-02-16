@@ -15,3 +15,6 @@ SETTINGS = Icon(path=Path(_RESOURCES_DIR, "settings-32"), system=True)
 
 with IMG.open(Path(_RESOURCES_DIR, "item-missing-symbolic-256.png")) as img:
     MISSING_ITEM_IMG = Image(img)
+
+with IMG.open(Path(_RESOURCES_DIR, "scanner-symbolic-256.png")) as img:
+    SCANNER_IMG = Image(img)

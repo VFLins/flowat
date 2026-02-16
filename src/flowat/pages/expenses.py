@@ -80,7 +80,12 @@ class ExpensesSection(BaseSection):
             on_change=self._on_change_recurring_expense_switch,
         )
         self.recurring_expense_amount = NumberInput(
-            style=Pack(flex=1), value=2, min=2, max=120, step=1, on_change=self._on_change_recurring_expense_amount
+            style=Pack(flex=1),
+            value=2,
+            min=2,
+            max=120,
+            step=1,
+            on_change=self._on_change_recurring_expense_amount,
         )
         # expense_form's initial data:
         self.paginator = InputPaginator(
@@ -89,7 +94,6 @@ class ExpensesSection(BaseSection):
             on_page_change=self._on_form_page_change,
         )
         self.expenses_source.sort_ascending = False
-        self._refresh_displayed_data()
 
         self.first_interaction = Column(
             style=style.CENTERED_MAIN_CONTAINER,
