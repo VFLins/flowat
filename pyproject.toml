@@ -31,6 +31,7 @@ requires = [
     "pandas~=3.0.0",
     "sqlalchemy~=2.0",
     "pillow",
+    "nflogic==0.1.0",
 ]
 test_requires = [
     "pytest",

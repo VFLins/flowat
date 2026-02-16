@@ -146,6 +146,7 @@ class RevenuesSection(BaseSection):
                         Button(
                             "Voltar",
                             style=style.SIMPLE_BUTTON,
+                            on_press=self.show_main_content,
                         ),
                         Button(
                             "Inserir",
