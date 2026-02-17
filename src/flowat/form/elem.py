@@ -44,6 +44,14 @@ class FormField(Box):
     - :input: The `input_widget` provided, should be a Toga widget that accepts user input;
     - :description: An extra `toga.Label` positioned below the input with extra information
       about it, will only be present if `description` is provided.
+    - :id: `id` to be assigned to the parent widget, it's children can be accessed as
+      properties [label, input, description];
+    - :is_required: Metadata indicating if this is a required field, can be accessed as
+      a property and can be useful to validation logic;
+    - :container_style: Styling defined to the parent container, should be used only
+      when trying to override the default behavior;
+    - :unstyled: If `True`, indicates if the input_widget should use it's own provided
+      styling, uses the default style by it's input type otherwise.
     """
 
     def __new__(
@@ -53,6 +61,7 @@ class FormField(Box):
         description: str | None = None,
         id: str | None = None,
         is_required: bool = False,
+        container_style: Pack | None = None,
         unstyled: bool = False,
     ):
         label_widget = Label(
@@ -60,12 +69,13 @@ class FormField(Box):
             id=f"{id}_label" if id else f"{label}_label",
             style=style.input_annotation(),
         )
-        if not unstyled:
-            input_widget.style = style.user_input(type(input_widget))
         self.contents = Column(
+            style=container_style if container_style else None,
             id=id if id else label,
             children=[label_widget, input_widget],
         )
+        if not unstyled:
+            input_widget.style = style.user_input(type(input_widget))
         if description:
             description_widget = Label(
                 text=description,

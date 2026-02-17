@@ -120,11 +120,13 @@ class RevenuesSection(BaseSection):
             ],
         )
         self.revenue_input_form = Column(
-            style=Pack(width=style.FORM_WIDTH),
+            style=style.MAIN_CONTAINER,
             children=[
                 FormField(
                     id="revenue_form_type",
+                    container_style=Pack(width=style.FORM_WIDTH),
                     input_widget=Selection(
+                        on_change=self._on_form_update,
                         items=[r.Name for r in self.revenue_type_source.current_data]
                     ),
                     label="Tipo",
@@ -132,6 +134,7 @@ class RevenuesSection(BaseSection):
                 ),
                 FormField(
                     id="revenue_form_description",
+                    container_style=Pack(width=style.FORM_WIDTH),
                     input_widget=TextInput(on_change=self._on_form_update),
                     label="Descrição",
                     unstyled=True,
@@ -164,7 +167,7 @@ class RevenuesSection(BaseSection):
             ],
         )
         self.revenue_scan_form = Column(
-            style=style.FORM_CONTAINER,
+            style=style.MAIN_CONTAINER,
             children=[
                 ImageView(
                     image=icon.SCANNER_IMG,
