@@ -127,7 +127,7 @@ class RevenuesSection(BaseSection):
                     container_style=Pack(width=style.FORM_WIDTH),
                     input_widget=Selection(
                         on_change=self._on_form_update,
-                        items=[r.Name for r in self.revenue_type_source.current_data]
+                        items=[r.Name for r in self.revenue_type_source.current_data],
                     ),
                     label="Tipo",
                     unstyled=True,
