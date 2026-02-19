@@ -1,4 +1,5 @@
-from sqlalchemy import create_engine, Engine, inspect
+from sqlalchemy import create_engine, Engine, inspect, select
+from sqlalchemy.orm import Session
 from typing import Generator
 import pandas as pd
 import nflogic
@@ -26,8 +27,27 @@ class TableName:
         )
 
 
-def read_flowat_revenues(engine: Engine = NFLOGIC_ENGINE) -> pd.DataFrame:
+def read_flowat_revenues(engine: Engine = db.DB_ENGINE) -> pd.DataFrame:
     """Reads data from flowat's database to get all documents already scanned."""
+    with Session(engine) as ses:
+        stmt = (
+            select(
+                db.RevenueEntry.Id,
+                db.ScannedInvoiceFile.DocumentIdentifier,
+                db.RevenueEntry.TimeStamp,
+                db.RevenueEntry.Description,
+                db.RevenueEntry.TransactionDate,
+                db.RevenueEntry.TransactionValue,
+            )
+            .where(db.RevenueEntry.Id == db.ScannedInvoiceFile.IdRevenueEntry)
+            .join(
+                db.RevenueEntry,
+                db.RevenueEntry.Id == db.ScannedInvoiceFile.IdRevenueEntry,
+            )
+        )
+        print(stmt)
+        res = ses.execute(stmt)
+        return pd.DataFrame(data=res, columns=[c.name for c in stmt.selected_columns])
 
 
 def read_nflogic_revenues(
