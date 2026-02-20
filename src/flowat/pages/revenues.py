@@ -17,7 +17,7 @@ import nflogic
 
 from .base import BaseSection
 
-from flowat.data import db, source, fmt
+from flowat.data import db, source, fmt, nf
 from flowat.const import icon, style
 from flowat.plot.bar import colplot
 from flowat.form.elem import FormField
@@ -266,24 +266,29 @@ class RevenuesSection(BaseSection):
         print(f"INFO: User selected directory for scanning: {result}")
         if not result:
             return
-        # xml files in the directory
         dir_files = nflogic.xml_files_in_dir(dir_path=result)
-        # number of files that will be processed
-        n_new_files = len(
+        n_new_files = self._get_amount_of_xml_files(directory=result)
+        if n_new_files == 0:
+            self.scan_info.text = "Nenhum arquivo novo e válido para processar."
+        else:
+            self._handle_processed_documents(n_new_files)
+
+    def _get_amount_of_xml_files(self, directory: str) -> int:
+        return len(
             list(
                 nflogic.api.cache.get_not_processed_inputs(
                     filepaths=dir_files, buy=False, ignore_fails=True, full_parse=False
                 )
             )
         )
-        if n_new_files == 0:
-            self.scan_info.text = "Nenhum arquivo novo e válido para processar."
-        else:
-            self.scan_activity.start()
-            self.scan_info.text = f"Processendo {n_new_files} arquivos..."
-            nflogic.parse_dir(dir_path=result, buy=False, full_parse=False)
-            self.scan_activity.stop()
-            self.scan_info.text = "Concluído!"
+
+    def _handle_processed_documents(self, n_files: int):
+        """Handles user interaction when adding data from processed documents."""
+        self.scan_activity.start()
+        self.scan_info.text = f"Processando {n_new_files} documentos, aguarde..."
+        nflogic.parse_dir(dir_path=result, buy=False, full_parse=False)
+        self.scan_activity.stop()
+        self.scan_info.text = "Concluído, clique \"Inserir\" para registrar as receitas."
 
     def change_sorting(self, widget: Button):
         sort_options = ["Adic. ↓", "Adic. ↑", "Venc. ↓", "Venc. ↑"]
