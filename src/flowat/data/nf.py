@@ -98,15 +98,12 @@ def get_new_seller_data(
         try:
             TMP_TABLE.create(bind=nf_engine, checkfirst=True)
             ses.execute(insert(TMP_TABLE), registered_docs)
-            stmt = (
-                select(
-                    NF_TABLE.c.Id,
-                    TMP_TABLE.c.DocId,
-                    NF_TABLE.c.DataHoraEmi,
-                    NF_TABLE.c.TotalProdutos,
-                ).
-                join(TMP_TABLE, NF_TABLE.c.ChaveNFe == TMP_TABLE.c.DocId)
-            )
+            stmt = select(
+                NF_TABLE.c.Id,
+                TMP_TABLE.c.DocId,
+                NF_TABLE.c.DataHoraEmi,
+                NF_TABLE.c.TotalProdutos,
+            ).join(TMP_TABLE, NF_TABLE.c.ChaveNFe == TMP_TABLE.c.DocId)
             res = ses.execute(stmt)
             return res
         finally:

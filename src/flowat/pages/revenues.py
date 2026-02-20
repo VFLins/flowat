@@ -166,8 +166,7 @@ class RevenuesSection(BaseSection):
                 ),
             ],
         )
-        self.revenue_scan_form = Column(
-            style=style.MAIN_CONTAINER,
+        self.revenue_scan_form_step1 = Column(
             children=[
                 ImageView(
                     image=icon.SCANNER_IMG,
@@ -178,7 +177,35 @@ class RevenuesSection(BaseSection):
                     style=style.user_input(Button),
                     on_press=self.nflogic_scan,
                 ),
+            ],
+        )
+        self.revenue_scan_form_step2 = FormField(
+            label="Vendedores encontrados",
+            input_widget=Table(on_activate=self.add_scanned_revenues),
+            description="Escolha um item com um clique duplo.",
+        )
+        self.revenue_scan_form_step3 = Column()
+        self.revenue_scan_form = Column(
+            style=style.MAIN_CONTAINER,
+            children=[
+                self.revenue_scan_form_step1,
                 Row(children=[self.scan_activity, self.scan_info]),
+                Row(
+                    children=[
+                        Box(style=Pack(flex=1)),  # push buttons to the right side
+                        Button(
+                            "Voltar",
+                            style=style.SIMPLE_BUTTON,
+                            on_press=self.show_main_content,
+                        ),
+                        Button(
+                            "Inserir",
+                            style=style.RIGHTMOST_SIMPLE_BUTTON,
+                            enabled=False,
+                            on_press=self.add_expense,
+                        ),
+                    ],
+                ),
             ],
         )
         self.revenue_form = OptionContainer(
@@ -268,6 +295,7 @@ class RevenuesSection(BaseSection):
             return
         dir_files = nflogic.xml_files_in_dir(dir_path=result)
         n_new_files = self._get_amount_of_xml_files(directory=result)
+        # TODO: Must also check if there are any files processed and not added
         if n_new_files == 0:
             self.scan_info.text = "Nenhum arquivo novo e válido para processar."
         else:
@@ -284,11 +312,25 @@ class RevenuesSection(BaseSection):
 
     def _handle_processed_documents(self, n_files: int):
         """Handles user interaction when adding data from processed documents."""
+        # 1. Processing
         self.scan_activity.start()
         self.scan_info.text = f"Processando {n_new_files} documentos, aguarde..."
         nflogic.parse_dir(dir_path=result, buy=False, full_parse=False)
         self.scan_activity.stop()
-        self.scan_info.text = "Concluído, clique \"Inserir\" para registrar as receitas."
+        # 2. Select seller name
+        seller_names = nf.get_seller_names()
+        if len(seller_names) == 1:
+            self.SELECTED_SELLER_NAME = seller_names[0]
+            self.revenue_scan_form.replace(
+                self.revenue_scan_form_step1, self.revenue_scan_form_step3
+            )
+        else:
+            self.revenue_scan_form.replace(
+                self.revenue_scan_form_step1, self.revenue_scan_form_step2
+            )
+
+    def add_scanned_revenues(self, widget: Table):
+        """Adds any data from the selected seller name to the database."""
 
     def change_sorting(self, widget: Button):
         sort_options = ["Adic. ↓", "Adic. ↑", "Venc. ↓", "Venc. ↑"]
