@@ -6,11 +6,13 @@ from sqlalchemy import (
     not_,
     Table,
     MetaData,
+    func,
     text,
     Column,
     String,
 )
 from sqlalchemy.orm import Session
+from contextlib import contextmanager
 from typing import Generator
 import pandas as pd
 import nflogic
@@ -75,6 +77,20 @@ def read_flowat_revenues(engine: Engine = db.DB_ENGINE) -> pd.DataFrame:
         res = ses.execute(stmt)
         return pd.DataFrame(data=res, columns=[c.name for c in stmt.selected_columns])
 
+@contextmanager
+def _set_temporary_table(*columns: Column, metadata: MetaData, engine: Engine) -> Table:
+    try:
+        TMP_TABLE = Table(
+            "FLOWAT_TEMPORARY",
+            metadata,
+            *columns,
+            prefixes=["TEMPORARY"],
+        )
+        TMP_TABLE.create(bind=nf_engine, checkfirst=True)
+        yield TMP_TABLE
+    finally:
+        TMP_TABLE.drop(bind=nf_engine, checkfirst=True)
+
 
 def get_new_seller_data(
     seller_name: TableName,
@@ -88,15 +104,12 @@ def get_new_seller_data(
     NF_TABLE = _get_table_by_name(table_name=seller_name.table_name, engine=nf_engine)
     # NOTE: use temporary table INSERT to avoid using a SELECT statement with a large
     # NOT IN clause
-    TMP_TABLE = Table(
-        "FLOWAT_TEMPORARY",
-        NF_TABLE.metadata,
-        Column("DocId", String, primary_key=True),
-        prefixes=["TEMPORARY"],
-    )
     with Session(bind=nf_engine) as ses:
-        try:
-            TMP_TABLE.create(bind=nf_engine, checkfirst=True)
+        with _set_temporary_table(
+            Column("DocId", String, primary_key=True),
+            metadata=NF_TABLE.metadata,
+            engine=nf_engine,
+        ) as TMP_TABLE:
             ses.execute(insert(TMP_TABLE), registered_docs)
             stmt = select(
                 NF_TABLE.c.Id,
@@ -106,8 +119,31 @@ def get_new_seller_data(
             ).join(TMP_TABLE, NF_TABLE.c.ChaveNFe == TMP_TABLE.c.DocId)
             res = ses.execute(stmt)
             return res
-        finally:
-            TMP_TABLE.drop(bind=nf_engine, checkfirst=True)
+
+
+def count_new_seller_data(
+    seller_name: TableName,
+    internal_engine: Engine = db.DB_ENGINE,
+    nf_engine: Engine = NFLOGIC_ENGINE,
+) -> Generator[tuple, None, None]:
+    """Get a list of rows collected from nflogic's database that is not present in a
+    flowat table.
+    """
+    registered_docs = _get_registered_document_identifiers(engine=internal_engine)
+    NF_TABLE = _get_table_by_name(table_name=seller_name.table_name, engine=nf_engine)
+    with Session(bind=nf_engine) as ses:
+        with _set_temporary_table(
+            Column("DocId", String, primary_key=True),
+            metadata=NF_TABLE.metadata,
+            engine=nf_engine,
+        ) as TMP_TABLE:
+            ses.execute(insert(TMP_TABLE), registered_docs)
+            stmt = (
+                select(func.count(NF_TABLE.c.Id))
+                .join(TMP_TABLE, NF_TABLE.c.ChaveNFe == TMP_TABLE.c.DocId)
+            )
+            res = ses.execute(stmt)
+            return res
 
 
 def get_seller_names(engine: Engine = NFLOGIC_ENGINE) -> list[TableName]:
