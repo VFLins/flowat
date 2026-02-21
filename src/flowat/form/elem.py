@@ -27,7 +27,7 @@ class Heading(Box):
     def __new__(self, label: str, level: Literal[1, 2] = 1, id: str | None = None):
         label_widget = Label(
             text=label,
-            id=f"{id}_label" if id else f"{label}_label",
+            id=f"{id}_label" if id else f"{label}_label" if label else None,
             style=style.HEADING2 if level == 2 else style.HEADING1,
         )
         divider = Divider()
@@ -66,7 +66,7 @@ class FormField(Box):
     ):
         label_widget = Label(
             text=label,
-            id=f"{id}_label" if id else f"{label}_label",
+            id=f"{id}_label" if id else f"{label}_label" if label else None,
             style=style.input_annotation(),
         )
         self.contents = Column(
@@ -79,7 +79,7 @@ class FormField(Box):
         if description:
             description_widget = Label(
                 text=description,
-                id=f"{id}_desc" if id else f"{label}_desc",
+                id=f"{id}_desc" if id else f"{label}_desc" if label else None,
                 style=style.input_annotation("legend"),
             )
             self.contents.add(description_widget)

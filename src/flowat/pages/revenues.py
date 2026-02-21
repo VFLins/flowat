@@ -59,10 +59,19 @@ class RevenuesSection(BaseSection):
         )
         self.scan_activity = ActivityIndicator()
         self.scan_info = Label(text="")
-        self.add_scanned_button = FormField(
+        self.scan_docs_button = FormField(
+            label="Ações",
+            input_widget=Button(
+                text="Escanear uma pasta",
+                style=style.user_input(Button),
+                on_press=self.nflogic_scan,
+            ),
+            description="Coleta dados de documentos em\numa pasta",
+        )
+        self.add_scanned_data_button = FormField(
             label="",
-            input_widget=Button("Inserir dados"),
-            description="Insere dados de documentos já\nprocessados",
+            input_widget=Button("Inserir dados", on_press=self.add_scanned_revenues),
+            description="Insere dados coletados no Flowat",
         )
         self.revenues_source.sort_ascending = False
 
@@ -172,24 +181,20 @@ class RevenuesSection(BaseSection):
             ],
         )
         self.revenue_scan_form_step1 = Column(
+            style=style.FORM_CONTAINER,
             children=[
                 ImageView(
                     image=icon.SCANNER_IMG,
                     style=Pack(margin=20, width=96, height=96),
                 ),
-                Button(
-                    text="Escanear uma pasta",
-                    style=style.user_input(Button),
-                    on_press=self.nflogic_scan,
-                ),
-                self.add_scanned_button,
+                Row(children=[self.scan_docs_button, self.add_scanned_data_button]),
             ],
         )
         self.revenue_scan_form_step2 = FormField(
             label="Vendedores encontrados",
             input_widget=Table(
                 headings=["Razão social do vendedor"],
-                on_activate=self.add_scanned_revenues
+                on_activate=self.add_scanned_revenues,
             ),
             description="Escolha um item com um clique duplo.",
         )
@@ -200,6 +205,7 @@ class RevenuesSection(BaseSection):
                 self.revenue_scan_form_step1,
                 Row(children=[self.scan_activity, self.scan_info]),
                 Row(
+                    style=style.FORM_CONTAINER,
                     children=[
                         Box(style=Pack(flex=1)),  # push buttons to the right side
                         Button(
@@ -324,14 +330,13 @@ class RevenuesSection(BaseSection):
 
     def _scan_documents(self, dir_path: str):
         """Handles user interaction when adding data from processed documents."""
-        # 1. Processing
         self.scan_activity.start()
-        self.scan_info.text = f"Processando documentos, aguarde..."
+        self.scan_info.text = "Processando documentos, aguarde..."
         nflogic.parse_dir(dir_path=dir_path, buy=False, full_parse=False)
         self.scan_activity.stop()
         self.scan_info.text = (
             "Documentos processados, seus dados ainda não estão no Flowat.\n"
-            'Clique "Adicionar dados" para Adicionar.'
+            'Clique "Inserir dados" para Adicionar.'
         )
 
     def add_scanned_revenues(self, widget: Table):
