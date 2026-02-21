@@ -59,6 +59,11 @@ class RevenuesSection(BaseSection):
         )
         self.scan_activity = ActivityIndicator()
         self.scan_info = Label(text="")
+        self.add_scanned_button = FormField(
+            label="",
+            input_widget=Button("Inserir dados"),
+            description="Insere dados de documentos\njá processados",
+        )
         self.revenues_source.sort_ascending = False
 
         self.first_interaction = Column(
@@ -177,6 +182,7 @@ class RevenuesSection(BaseSection):
                     style=style.user_input(Button),
                     on_press=self.nflogic_scan,
                 ),
+                self.add_scanned_button,
             ],
         )
         self.revenue_scan_form_step2 = FormField(
@@ -291,10 +297,8 @@ class RevenuesSection(BaseSection):
         """Handles user's response to the dialog invoked by `self.nflogic_scan`."""
         result = task.result()
         print(f"INFO: User selected directory for scanning: {result}")
-        if not result:
-            return
-        dir_files = nflogic.xml_files_in_dir(dir_path=result)
-        self._check_available_scanned_data()
+        if result:
+            self._check_available_scanned_data()
 
     def _check_available_scanned_data(self):
         """Allows the user to add scanned data if any is available, forbids otherwise."""
