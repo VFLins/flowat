@@ -62,7 +62,7 @@ class RevenuesSection(BaseSection):
         self.add_scanned_button = FormField(
             label="",
             input_widget=Button("Inserir dados"),
-            description="Insere dados de documentos\njá processados",
+            description="Insere dados de documentos já\nprocessados",
         )
         self.revenues_source.sort_ascending = False
 
@@ -187,7 +187,10 @@ class RevenuesSection(BaseSection):
         )
         self.revenue_scan_form_step2 = FormField(
             label="Vendedores encontrados",
-            input_widget=Table(on_activate=self.add_scanned_revenues),
+            input_widget=Table(
+                headings=["Razão social do vendedor"],
+                on_activate=self.add_scanned_revenues
+            ),
             description="Escolha um item com um clique duplo.",
         )
         self.revenue_scan_form_step3 = Column()
@@ -208,7 +211,7 @@ class RevenuesSection(BaseSection):
                             "Inserir",
                             style=style.RIGHTMOST_SIMPLE_BUTTON,
                             enabled=False,
-                            on_press=self.add_expense,
+                            on_press=self.add_scanned_revenues,
                         ),
                     ],
                 ),
@@ -298,7 +301,7 @@ class RevenuesSection(BaseSection):
         result = task.result()
         print(f"INFO: User selected directory for scanning: {result}")
         if result:
-            self._check_available_scanned_data()
+            self._scan_documents(dir_path=result)
 
     def _check_available_scanned_data(self):
         """Allows the user to add scanned data if any is available, forbids otherwise."""
@@ -319,24 +322,17 @@ class RevenuesSection(BaseSection):
             self.scan_info.text = f"Dados de {acm_count} documentos encontrados."
             # activate 'add scanned data' button
 
-    def _handle_processed_documents(self, n_files: int):
+    def _scan_documents(self, dir_path: str):
         """Handles user interaction when adding data from processed documents."""
         # 1. Processing
         self.scan_activity.start()
-        self.scan_info.text = f"Processando {n_new_files} documentos, aguarde..."
-        nflogic.parse_dir(dir_path=result, buy=False, full_parse=False)
+        self.scan_info.text = f"Processando documentos, aguarde..."
+        nflogic.parse_dir(dir_path=dir_path, buy=False, full_parse=False)
         self.scan_activity.stop()
-        # 2. Select seller name
-        seller_names = nf.get_seller_names()
-        if len(seller_names) == 1:
-            self.SELECTED_SELLER_NAME = seller_names[0]
-            self.revenue_scan_form.replace(
-                self.revenue_scan_form_step1, self.revenue_scan_form_step3
-            )
-        else:
-            self.revenue_scan_form.replace(
-                self.revenue_scan_form_step1, self.revenue_scan_form_step2
-            )
+        self.scan_info.text = (
+            "Documentos processados, seus dados ainda não estão no Flowat.\n"
+            'Clique "Adicionar dados" para Adicionar.'
+        )
 
     def add_scanned_revenues(self, widget: Table):
         """Adds any data from the selected seller name to the database."""
