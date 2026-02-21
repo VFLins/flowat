@@ -294,21 +294,26 @@ class RevenuesSection(BaseSection):
         if not result:
             return
         dir_files = nflogic.xml_files_in_dir(dir_path=result)
-        n_new_files = self._get_amount_of_xml_files(directory=result)
-        # TODO: Must also check if there are any files processed and not added
-        if n_new_files == 0:
-            self.scan_info.text = "Nenhum arquivo novo e válido para processar."
-        else:
-            self._handle_processed_documents(n_new_files)
+        self._check_available_scanned_data()
 
-    def _get_amount_of_xml_files(self, directory: str) -> int:
-        return len(
-            list(
-                nflogic.api.cache.get_not_processed_inputs(
-                    filepaths=dir_files, buy=False, ignore_fails=True, full_parse=False
-                )
-            )
-        )
+    def _check_available_scanned_data(self):
+        """Allows the user to add scanned data if any is available, forbids otherwise."""
+        self.scan_activity.start()
+        self.scan_info.text = "Procurando dados para adicionar..."
+        seller_names = nf.get_seller_names()
+        self.AVAILABLE_SELLER_NAMES, acm_count = [], 0
+        for seller in seller_names:
+            count = nf.count_new_seller_data(seller_name=seller)
+            if count > 0:
+                self.AVAILABLE_SELLER_NAMES.append(seller.display_name)
+                acm_count = acm_count + count
+        self.scan_activity.stop()
+        if acm_count == 0:
+            self.scan_info.text = "Nenhum dado novo para adicionar."
+            # deactivate 'add scanned data' button
+        else:
+            self.scan_info.text = f"Dados de {acm_count} documentos encontrados."
+            # activate 'add scanned data' button
 
     def _handle_processed_documents(self, n_files: int):
         """Handles user interaction when adding data from processed documents."""
