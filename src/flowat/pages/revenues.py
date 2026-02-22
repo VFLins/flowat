@@ -8,6 +8,7 @@ from toga.widgets.table import Table
 from toga.widgets.label import Label
 from toga.widgets.box import Box, Column, Row
 from toga.widgets.optioncontainer import OptionContainer
+from toga.widgets.scrollcontainer import ScrollContainer
 from toga.dialogs import InfoDialog, ConfirmDialog, SelectFolderDialog
 from toga.style import Pack
 
@@ -58,7 +59,7 @@ class RevenuesSection(BaseSection):
             on_press=self.rm_revenue,
         )
         self.scan_activity = ActivityIndicator()
-        self.scan_info = Label(text="")
+        self.scan_info = Label(text="", style=Pack(font_size=13))
         self.scan_docs_button = FormField(
             label="Ações",
             input_widget=Button(
@@ -66,12 +67,12 @@ class RevenuesSection(BaseSection):
                 style=style.user_input(Button),
                 on_press=self.nflogic_scan,
             ),
-            description="Coleta dados de documentos em\numa pasta",
+            description="Escaneia dados dos arquivos\nde uma pasta",
         )
         self.add_scanned_data_button = FormField(
             label="",
-            input_widget=Button("Inserir dados", on_press=self.add_scanned_revenues),
-            description="Insere dados coletados no Flowat",
+            input_widget=Button("Selecionar dados", on_press=self.add_scanned_revenues),
+            description="Seleciona dados disponíveis\npara inserir",
         )
         self.revenues_source.sort_ascending = False
 
@@ -180,15 +181,9 @@ class RevenuesSection(BaseSection):
                 ),
             ],
         )
-        self.revenue_scan_form_step1 = Column(
-            style=style.FORM_CONTAINER,
-            children=[
-                ImageView(
-                    image=icon.SCANNER_IMG,
-                    style=Pack(margin=20, width=96, height=96),
-                ),
-                Row(children=[self.scan_docs_button, self.add_scanned_data_button]),
-            ],
+        self.revenue_scan_form_step1 = Row(
+            style=style.CENTERED_FORM_CONTAINER,
+            children=[self.scan_docs_button, self.add_scanned_data_button],
         )
         self.revenue_scan_form_step2 = FormField(
             label="Vendedores encontrados",
@@ -199,29 +194,35 @@ class RevenuesSection(BaseSection):
             description="Escolha um item com um clique duplo.",
         )
         self.revenue_scan_form_step3 = Column()
-        self.revenue_scan_form = Column(
-            style=style.MAIN_CONTAINER,
-            children=[
-                self.revenue_scan_form_step1,
-                Row(children=[self.scan_activity, self.scan_info]),
-                Row(
-                    style=style.FORM_CONTAINER,
-                    children=[
-                        Box(style=Pack(flex=1)),  # push buttons to the right side
-                        Button(
-                            "Voltar",
-                            style=style.SIMPLE_BUTTON,
-                            on_press=self.show_main_content,
-                        ),
-                        Button(
-                            "Inserir",
-                            style=style.RIGHTMOST_SIMPLE_BUTTON,
-                            enabled=False,
-                            on_press=self.add_scanned_revenues,
-                        ),
-                    ],
-                ),
-            ],
+        self.revenue_scan_form = ScrollContainer(
+            content=Column(
+                style=style.CENTERED_MAIN_CONTAINER,
+                children=[
+                    ImageView(
+                        image=icon.SCANNER_IMG,
+                        style=Pack(margin=(40, 0, 20, 0), width=96, height=96),
+                    ),
+                    Row(children=[self.scan_activity, self.scan_info]),
+                    self.revenue_scan_form_step1,
+                    Row(
+                        style=style.FORM_CONTAINER,
+                        children=[
+                            Box(style=Pack(flex=1)),  # push buttons to the right side
+                            Button(
+                                "Voltar",
+                                style=style.SIMPLE_BUTTON,
+                                on_press=self.show_main_content,
+                            ),
+                            Button(
+                                "Inserir",
+                                style=style.RIGHTMOST_SIMPLE_BUTTON,
+                                enabled=False,
+                                on_press=self.add_scanned_revenues,
+                            ),
+                        ],
+                    ),
+                ],
+            )
         )
         self.revenue_form = OptionContainer(
             style=style.MAIN_CONTAINER,
@@ -245,6 +246,7 @@ class RevenuesSection(BaseSection):
         """
         self.main_container.clear()
         self.main_container.add(self.revenue_form)
+        asyncio.create_task(self._check_available_scanned_data())
 
     def show_main_content(self, widget: Button | None = None):
         """Removes currently displayed elments and show a summary of revenues."""
@@ -309,24 +311,26 @@ class RevenuesSection(BaseSection):
         if result:
             self._scan_documents(dir_path=result)
 
-    def _check_available_scanned_data(self):
+    async def _check_available_scanned_data(self):
         """Allows the user to add scanned data if any is available, forbids otherwise."""
+        self.add_scanned_data_button.input.enabled = False
         self.scan_activity.start()
         self.scan_info.text = "Procurando dados para adicionar..."
         seller_names = nf.get_seller_names()
         self.AVAILABLE_SELLER_NAMES, acm_count = [], 0
         for seller in seller_names:
-            count = nf.count_new_seller_data(seller_name=seller)
+            count = await asyncio.to_thread(
+                nf.count_new_seller_data(seller_name=seller)
+            )
             if count > 0:
                 self.AVAILABLE_SELLER_NAMES.append(seller.display_name)
-                acm_count = acm_count + count
+                acm_count = await acm_count + count
         self.scan_activity.stop()
         if acm_count == 0:
-            self.scan_info.text = "Nenhum dado novo para adicionar."
-            # deactivate 'add scanned data' button
+            self.scan_info.text = "Nenhum dado disponível para inserir."
         else:
             self.scan_info.text = f"Dados de {acm_count} documentos encontrados."
-            # activate 'add scanned data' button
+            self.add_scanned_data_button.input.enabled = True
 
     def _scan_documents(self, dir_path: str):
         """Handles user interaction when adding data from processed documents."""
@@ -334,10 +338,7 @@ class RevenuesSection(BaseSection):
         self.scan_info.text = "Processando documentos, aguarde..."
         nflogic.parse_dir(dir_path=dir_path, buy=False, full_parse=False)
         self.scan_activity.stop()
-        self.scan_info.text = (
-            "Documentos processados, seus dados ainda não estão no Flowat.\n"
-            'Clique "Inserir dados" para Adicionar.'
-        )
+        asyncio.create_task(self._check_available_scanned_data())
 
     def add_scanned_revenues(self, widget: Table):
         """Adds any data from the selected seller name to the database."""
@@ -363,7 +364,7 @@ class RevenuesSection(BaseSection):
                 self.revenues_source.sort_ascending = False
         self._refresh_displayed_data()
 
-    def _on_reload_plot(self, widget: WebView):
+    def _on_reload_plot(self, widget: WebView, **kwargs):
         n_loads = getattr(widget, "_n_loads", 0)
         widget._n_loads = n_loads + 1
         if widget._n_loads % 2 == 1:
