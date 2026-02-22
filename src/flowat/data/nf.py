@@ -2,7 +2,9 @@ from sqlalchemy import (
     create_engine,
     Engine,
     inspect,
+    insert,
     select,
+    exists,
     not_,
     Table,
     MetaData,
@@ -43,17 +45,17 @@ class TableName:
 def _get_table_by_name(table_name: str, engine: Engine) -> Table:
     """Returns a `sqlalchemy.Table` object from name and engine."""
     meta = MetaData()
-    return Table(name=table_name, metadata=meta, autoload_with=engine)
+    return Table(table_name, meta, autoload_with=engine)
 
 
 def _get_registered_document_identifiers(
     engine: Engine = db.DB_ENGINE,
-) -> Generator[str, None, None]:
+) -> list[str]:
     """Returns a list of document identifiers registered in Flowat's database."""
     with Session(engine) as ses:
         stmt = select(db.ScannedInvoiceFile.DocumentIdentifier)
         res = ses.execute(stmt)
-        return (r.DocumentIdentifier for r in res)
+        return [r.DocumentIdentifier for r in res]
 
 
 def read_flowat_revenues(engine: Engine = db.DB_ENGINE) -> pd.DataFrame:
@@ -77,6 +79,7 @@ def read_flowat_revenues(engine: Engine = db.DB_ENGINE) -> pd.DataFrame:
         res = ses.execute(stmt)
         return pd.DataFrame(data=res, columns=[c.name for c in stmt.selected_columns])
 
+
 @contextmanager
 def _set_temporary_table(*columns: Column, metadata: MetaData, engine: Engine) -> Table:
     try:
@@ -86,10 +89,10 @@ def _set_temporary_table(*columns: Column, metadata: MetaData, engine: Engine) -
             *columns,
             prefixes=["TEMPORARY"],
         )
-        TMP_TABLE.create(bind=nf_engine, checkfirst=True)
+        TMP_TABLE.create(bind=engine, checkfirst=True)
         yield TMP_TABLE
     finally:
-        TMP_TABLE.drop(bind=nf_engine, checkfirst=True)
+        TMP_TABLE.drop(bind=engine, checkfirst=True)
 
 
 def get_new_seller_data(
@@ -110,7 +113,8 @@ def get_new_seller_data(
             metadata=NF_TABLE.metadata,
             engine=nf_engine,
         ) as TMP_TABLE:
-            ses.execute(insert(TMP_TABLE), registered_docs)
+            if registered_docs:
+                ses.execute(insert(TMP_TABLE), [{"DocId": i} for i in registered_docs])
             stmt = select(
                 NF_TABLE.c.Id,
                 TMP_TABLE.c.DocId,
@@ -125,7 +129,7 @@ def count_new_seller_data(
     seller_name: TableName,
     internal_engine: Engine = db.DB_ENGINE,
     nf_engine: Engine = NFLOGIC_ENGINE,
-) -> Generator[tuple, None, None]:
+) -> int:
     """Get a list of rows collected from nflogic's database that is not present in a
     flowat table.
     """
@@ -137,13 +141,13 @@ def count_new_seller_data(
             metadata=NF_TABLE.metadata,
             engine=nf_engine,
         ) as TMP_TABLE:
-            ses.execute(insert(TMP_TABLE), registered_docs)
-            stmt = (
-                select(func.count(NF_TABLE.c.Id))
-                .join(TMP_TABLE, NF_TABLE.c.ChaveNFe == TMP_TABLE.c.DocId)
+            if registered_docs:
+                ses.execute(insert(TMP_TABLE), [{"DocId": i} for i in registered_docs])
+            stmt = select(func.count(NF_TABLE.c.ChaveNFe)).where(
+                not_(exists().where(TMP_TABLE.c.DocId == NF_TABLE.c.ChaveNFe))
             )
             res = ses.execute(stmt)
-            return res
+            return res.scalar_one()
 
 
 def get_seller_names(engine: Engine = NFLOGIC_ENGINE) -> list[TableName]:
