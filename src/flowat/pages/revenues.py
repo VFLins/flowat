@@ -13,6 +13,7 @@ from toga.dialogs import InfoDialog, ConfirmDialog, SelectFolderDialog
 from toga.style import Pack
 
 from datetime import date, datetime
+from typing import Any
 import asyncio
 import nflogic
 
@@ -209,6 +210,7 @@ class RevenuesSection(BaseSection):
             input_widget=Table(
                 style=Pack(width=style.FORM_WIDTH, flex=1), headings=["Valor", "Data"]
             ),
+            unstyled=True,
         )
         self.revenue_scan_form_content = Column(
             style=style.CENTERED_MAIN_CONTAINER,
@@ -268,7 +270,7 @@ class RevenuesSection(BaseSection):
 
     def show_main_content(self, widget: Button | None = None):
         """Removes currently displayed elments and show a summary of revenues."""
-        self._clear_revenue_form()
+        self._reset_scanned_revenue_form()
         self.main_container.clear()
         if db.RevenueEntry().table_is_empty():
             self.main_container.style = style.CENTERED_MAIN_CONTAINER
@@ -332,7 +334,7 @@ class RevenuesSection(BaseSection):
 
     async def _check_available_scanned_data(self):
         """Allows the user to add scanned data if any is available, forbids otherwise."""
-        self.add_selected_data_button.input.enabled = False
+        self.select_scanned_revenues_button.input.enabled = False
         self.scan_activity.start()
         self.scan_info.text = "Procurando dados para adicionar..."
         seller_names = nf.get_seller_names()
@@ -349,7 +351,7 @@ class RevenuesSection(BaseSection):
             self.scan_info.text = "Nenhum dado disponível para inserir."
         else:
             self.scan_info.text = f"Dados de {acm_count} documentos encontrados."
-            self.add_selected_data_button.input.enabled = True
+            self.select_scanned_revenues_button.input.enabled = True
 
     def _scan_documents(self, dir_path: str):
         """Handles user interaction when adding data from processed documents."""
@@ -364,26 +366,37 @@ class RevenuesSection(BaseSection):
     def select_scanned_revenues(self, widget: Button):
         """Guides the user into selecting the desired subset of the scanned data."""
         seller_names = nf.get_seller_names()
-        print(f"INFO: Listing {seller_names=}")
         if len(seller_names) > 1:
             self.scan_info.text = "Escolha o nome do vendedor com um clique duplo"
             self.revenue_scan_form_step2.input.data = seller_names
             self.revenue_scan_form_content.remove(self.revenue_scan_form_step1)
             self.revenue_scan_form_content.add(self.revenue_scan_form_step2)
         else:
-            self.scan_info.text = (
-                "Revise as transações que serão adicionada,\n",
-                'clique "Inserir" para confirmar',
-            )
-            self.add_scanned_data_button.input.enabled = True
-            self.revenue_scan_form_content.remove(self.revenue_scan_form_step1)
-            self.revenue_scan_form_content.add(self.revenue_scan_form_step3)
+            self._load_seller_data(seller_name=seller_names[0])
 
-    def _fetch_selected_revenues(self, widget: Table):
-        """Prepares the selected set of revenue data to be loaded."""
-
-    def add_selected_revenues(self, widget: Table):
+    def add_selected_revenues(self, widget: Table, row: Any, **kwargs):
         """Adds any data from the selected seller name to the database."""
+        self._load_seller_data(seller_name=row.name)
+        self.scan_info.text = (
+            "Revise as transações que serão adicionadas,\n"
+            'clique "Inserir" para confirmar'
+        )
+        self.revenue_scan_form_content.add(self.revenue_scan_form_step3)
+
+    def _load_seller_data(self, seller_name: nf.TableName):
+        """Prepares the selected set of revenue data to be inserted."""
+        self.scan_info.text = (
+            "Revise as transações que serão adicionadas,\n",
+            'clique "Inserir" para confirmar',
+        )
+        new_data = nf.get_new_seller_data(seller_name=seller_name)
+        self.revenue_scan_form_step3.input.data = [
+            {"data": r.DataHoraEmi, "valor": r.ValorProdutos} for r in new_data
+        ]
+        self.revenue_scan_form_content.remove(self.revenue_scan_form_step1)
+        self.revenue_scan_form_content.remove(self.revenue_scan_form_step2)
+        self.revenue_scan_form_content.add(self.revenue_scan_form_step3)
+        self.add_scanned_data_button.enabled = True
 
     def change_sorting(self, widget: Button):
         sort_options = ["Adic. ↓", "Adic. ↑", "Venc. ↓", "Venc. ↑"]
@@ -474,9 +487,7 @@ class RevenuesSection(BaseSection):
     def _clear_revenue_form(self):
         """Resets revenue form fields to their default values."""
         # scanned data
-        self.revenue_scan_form_content.remove(self.revenue_scan_form_step2)
-        self.revenue_scan_form_content.remove(self.revenue_scan_form_step3)
-        self.revenue_scan_form_content.add(self.revenue_scan_form_step1)
+        self._reset_scanned_revenue_form()
         # revenue type
         type_field = self._app.widgets["revenue_form_type"]
         type_data = self.revenue_type_source.current_data
@@ -487,6 +498,13 @@ class RevenuesSection(BaseSection):
         self.date_input.value = date.today()
         # value
         self._app.widgets["revenue_form_value"].input.value = ""
+
+    def _reset_scanned_revenue_form(self):
+        """Returns the 'scanned revenues' form to it's initial state."""
+        self.revenue_scan_form_content.remove(self.revenue_scan_form_step2)
+        self.revenue_scan_form_content.remove(self.revenue_scan_form_step3)
+        self.revenue_scan_form_content.add(self.revenue_scan_form_step1)
+        self.add_scanned_data_button.enabled = False
 
     def _get_revenue_form_entry(self) -> db.RevenueEntry:
         type_field: Selection = self._app.widgets["revenue_form_type"]
