@@ -69,10 +69,10 @@ class RevenuesSection(BaseSection):
             ),
             description="Escaneia dados dos arquivos\nde uma pasta",
         )
-        self.add_scanned_data_button = FormField(
+        self.add_selected_data_button = FormField(
             label="",
             input_widget=Button(
-                "Selecionar dados", on_press=self.select_scanned_revenues
+                "Selecionar dados", on_press=self.add_selected_revenues
             ),
             description="Seleciona dados disponíveis\npara inserir",
         )
@@ -197,7 +197,13 @@ class RevenuesSection(BaseSection):
             ),
             unstyled=True,
         )
-        self.revenue_scan_form_step3 = Column()
+        self.revenue_scan_form_step3 = FormField(
+            label="",
+            container_style=style.CENTERED_MAIN_CONTAINER,
+            input_widget=Table(
+                style=Pack(width=style.FORM_WIDTH, flex=1), headings=["Valor", "Data"]
+            ),
+        )
         self.revenue_scan_form_content = Column(
             style=style.CENTERED_MAIN_CONTAINER,
             children=[self.revenue_scan_form_step1],
@@ -366,6 +372,11 @@ class RevenuesSection(BaseSection):
             self.revenue_scan_form_content.remove(self.revenue_scan_form_step1)
             self.revenue_scan_form_content.add(self.revenue_scan_form_step2)
         else:
+            self.scan_info.text = (
+                "Revise as transações que serão adicionada,\n",
+                'clique "Inserir" para confirmar',
+            )
+            self.add_selected_data_button.enabled = True
             self.revenue_scan_form_content.remove(self.revenue_scan_form_step1)
             self.revenue_scan_form_content.add(self.revenue_scan_form_step3)
 
