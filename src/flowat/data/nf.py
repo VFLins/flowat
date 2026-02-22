@@ -118,14 +118,18 @@ def get_new_seller_data(
         ) as TMP_TABLE:
             if registered_docs:
                 ses.execute(insert(TMP_TABLE), [{"DocId": i} for i in registered_docs])
-            stmt = select(
-                NF_TABLE.c.Id,
-                TMP_TABLE.c.DocId,
-                NF_TABLE.c.DataHoraEmi,
-                NF_TABLE.c.TotalProdutos,
-            ).join(TMP_TABLE, NF_TABLE.c.ChaveNFe == TMP_TABLE.c.DocId)
+            stmt = (
+                select(
+                    NF_TABLE.c.Id,
+                    TMP_TABLE.c.DocId,
+                    NF_TABLE.c.DataHoraEmi,
+                    NF_TABLE.c.TotalProdutos,
+                )
+                .where(not_(exists().where(TMP_TABLE.c.DocId == NF_TABLE.c.ChaveNFe)))
+                .join(TMP_TABLE, TMP_TABLE.c.DocId == NF_TABLE.c.ChaveNFe)
+            )
             res = ses.execute(stmt)
-            return res
+            return res.all()
 
 
 def count_new_seller_data(

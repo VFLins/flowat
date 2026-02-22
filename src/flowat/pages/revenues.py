@@ -386,13 +386,15 @@ class RevenuesSection(BaseSection):
     def _load_seller_data(self, seller_name: nf.TableName):
         """Prepares the selected set of revenue data to be inserted."""
         self.scan_info.text = (
-            "Revise as transações que serão adicionadas,\n",
-            'clique "Inserir" para confirmar',
+            "Revise as transações que serão adicionadas,\n"
+            'clique "Inserir" para confirmar'
         )
-        new_data = nf.get_new_seller_data(seller_name=seller_name)
-        self.revenue_scan_form_step3.input.data = [
-            {"data": r.DataHoraEmi, "valor": r.ValorProdutos} for r in new_data
+        new_data = [
+            {"data": r.DataHoraEmi, "valor": r.ValorProdutos}
+            for r in nf.get_new_seller_data(seller_name=seller_name)
         ]
+        print(f"INFO: User selected data: {new_data}")
+        self.revenue_scan_form_step3.input.data = new_data
         self.revenue_scan_form_content.remove(self.revenue_scan_form_step1)
         self.revenue_scan_form_content.remove(self.revenue_scan_form_step2)
         self.revenue_scan_form_content.add(self.revenue_scan_form_step3)
