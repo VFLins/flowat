@@ -38,8 +38,11 @@ class TableName:
             self.table_name.replace("VENDA_", "")
             .replace("COMPRA_", "")
             .replace("_", " ")
-            .title()
+            .upper()
         )
+
+    def __str__(self):
+        return self.display_name
 
 
 def _get_table_by_name(table_name: str, engine: Engine) -> Table:

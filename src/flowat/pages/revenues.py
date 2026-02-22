@@ -188,12 +188,14 @@ class RevenuesSection(BaseSection):
             children=[self.scan_docs_button, self.add_scanned_data_button],
         )
         self.revenue_scan_form_step2 = FormField(
-            label="Vendedores encontrados",
+            label="",
+            container_style=style.CENTERED_MAIN_CONTAINER,
             input_widget=Table(
-                headings=["Razão social do vendedor"],
+                style=Pack(width=style.FORM_WIDTH, flex=1),
+                accessors=["name"],
                 on_activate=self.add_selected_revenues,
             ),
-            description="Escolha um item com um clique duplo.",
+            unstyled=True,
         )
         self.revenue_scan_form_step3 = Column()
         self.revenue_scan_form_content = Column(
@@ -214,7 +216,7 @@ class RevenuesSection(BaseSection):
                     ),
                     self.revenue_scan_form_content,
                     Row(
-                        style=style.FORM_CONTAINER,
+                        style=Pack(width=style.FORM_WIDTH),
                         children=[
                             Box(style=Pack(flex=1)),  # push buttons to the right side
                             Button(
@@ -357,14 +359,15 @@ class RevenuesSection(BaseSection):
     def select_scanned_revenues(self, widget: Button):
         """Guides the user into selecting the desired subset of the scanned data."""
         seller_names = nf.get_seller_names()
-        if len(seller_names) == 1:
+        print(f"INFO: Listing {seller_names=}")
+        if len(seller_names) > 1:
+            self.scan_info.text = "Escolha o nome do vendedor com um clique duplo"
+            self.revenue_scan_form_step2.input.data = seller_names
             self.revenue_scan_form_content.remove(self.revenue_scan_form_step1)
             self.revenue_scan_form_content.add(self.revenue_scan_form_step2)
         else:
-            self.revenue_scan_form_content.replace(
-                self.revenue_scan_form_step1,
-                self.revenue_scan_form_step3,
-            )
+            self.revenue_scan_form_content.remove(self.revenue_scan_form_step1)
+            self.revenue_scan_form_content.add(self.revenue_scan_form_step3)
 
     def add_selected_revenues(self, widget: Table):
         """Adds any data from the selected seller name to the database."""
