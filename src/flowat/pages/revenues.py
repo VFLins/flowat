@@ -69,7 +69,7 @@ class RevenuesSection(BaseSection):
             ),
             description="Escaneia dados dos arquivos\nde uma pasta",
         )
-        self.add_selected_data_button = FormField(
+        self.select_scanned_revenues_button = FormField(
             label="",
             input_widget=Button(
                 "Selecionar dados", on_press=self.select_scanned_revenues
@@ -185,7 +185,7 @@ class RevenuesSection(BaseSection):
         )
         self.revenue_scan_form_step1 = Row(
             style=style.CENTERED_FORM_CONTAINER,
-            children=[self.scan_docs_button, self.add_selected_data_button],
+            children=[self.scan_docs_button, self.select_scanned_revenues_button],
         )
         self.revenue_scan_form_step2 = FormField(
             label="",
@@ -267,9 +267,7 @@ class RevenuesSection(BaseSection):
 
     def show_main_content(self, widget: Button | None = None):
         """Removes currently displayed elments and show a summary of revenues."""
-        self.revenue_scan_form_content.remove(self.revenue_scan_form_step2)
-        self.revenue_scan_form_content.remove(self.revenue_scan_form_step3)
-        self.revenue_scan_form_content.add(self.revenue_scan_form_step1)
+        self._clear_revenue_form()
         self.main_container.clear()
         if db.RevenueEntry().table_is_empty():
             self.main_container.style = style.CENTERED_MAIN_CONTAINER
@@ -471,6 +469,10 @@ class RevenuesSection(BaseSection):
 
     def _clear_revenue_form(self):
         """Resets revenue form fields to their default values."""
+        # scanned data
+        self.revenue_scan_form_content.remove(self.revenue_scan_form_step2)
+        self.revenue_scan_form_content.remove(self.revenue_scan_form_step3)
+        self.revenue_scan_form_content.add(self.revenue_scan_form_step1)
         # revenue type
         type_field = self._app.widgets["revenue_form_type"]
         type_data = self.revenue_type_source.current_data
