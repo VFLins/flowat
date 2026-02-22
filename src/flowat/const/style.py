@@ -22,6 +22,13 @@ MAIN_CONTAINER = Pack(
     width=CONTENT_WIDTH,
     margin=(0, 0, 20, 0),
 )
+CENTERED_FORM_CONTAINER = Pack(
+    direction="row",
+    align_items="center",
+    flex=1,
+    width=FORM_WIDTH,
+    margin=(0, 0, 20, 0),
+)
 FORM_CONTAINER = Pack(
     direction="column",
     align_items="center",
