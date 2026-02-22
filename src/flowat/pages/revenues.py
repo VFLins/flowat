@@ -320,11 +320,11 @@ class RevenuesSection(BaseSection):
         self.AVAILABLE_SELLER_NAMES, acm_count = [], 0
         for seller in seller_names:
             count = await asyncio.to_thread(
-                nf.count_new_seller_data(seller_name=seller)
+                nf.count_new_seller_data, seller_name=seller
             )
             if count > 0:
                 self.AVAILABLE_SELLER_NAMES.append(seller.display_name)
-                acm_count = await acm_count + count
+                acm_count = acm_count + count
         self.scan_activity.stop()
         if acm_count == 0:
             self.scan_info.text = "Nenhum dado disponível para inserir."
