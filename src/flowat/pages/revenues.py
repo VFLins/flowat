@@ -72,7 +72,7 @@ class RevenuesSection(BaseSection):
         self.add_selected_data_button = FormField(
             label="",
             input_widget=Button(
-                "Selecionar dados", on_press=self.add_selected_revenues
+                "Selecionar dados", on_press=self.select_scanned_revenues
             ),
             description="Seleciona dados disponíveis\npara inserir",
         )
@@ -185,7 +185,7 @@ class RevenuesSection(BaseSection):
         )
         self.revenue_scan_form_step1 = Row(
             style=style.CENTERED_FORM_CONTAINER,
-            children=[self.scan_docs_button, self.add_scanned_data_button],
+            children=[self.scan_docs_button, self.add_selected_data_button],
         )
         self.revenue_scan_form_step2 = FormField(
             label="",
@@ -333,7 +333,7 @@ class RevenuesSection(BaseSection):
 
     async def _check_available_scanned_data(self):
         """Allows the user to add scanned data if any is available, forbids otherwise."""
-        self.add_scanned_data_button.input.enabled = False
+        self.add_selected_data_button.input.enabled = False
         self.scan_activity.start()
         self.scan_info.text = "Procurando dados para adicionar..."
         seller_names = nf.get_seller_names()
@@ -350,7 +350,7 @@ class RevenuesSection(BaseSection):
             self.scan_info.text = "Nenhum dado disponível para inserir."
         else:
             self.scan_info.text = f"Dados de {acm_count} documentos encontrados."
-            self.add_scanned_data_button.input.enabled = True
+            self.add_selected_data_button.input.enabled = True
 
     def _scan_documents(self, dir_path: str):
         """Handles user interaction when adding data from processed documents."""
