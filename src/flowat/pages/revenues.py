@@ -71,7 +71,9 @@ class RevenuesSection(BaseSection):
         )
         self.add_scanned_data_button = FormField(
             label="",
-            input_widget=Button("Selecionar dados", on_press=self.add_scanned_revenues),
+            input_widget=Button(
+                "Selecionar dados", on_press=self.select_scanned_revenues
+            ),
             description="Seleciona dados disponíveis\npara inserir",
         )
         self.revenues_source.sort_ascending = False
@@ -189,11 +191,15 @@ class RevenuesSection(BaseSection):
             label="Vendedores encontrados",
             input_widget=Table(
                 headings=["Razão social do vendedor"],
-                on_activate=self.add_scanned_revenues,
+                on_activate=self.add_selected_revenues,
             ),
             description="Escolha um item com um clique duplo.",
         )
         self.revenue_scan_form_step3 = Column()
+        self.revenue_scan_form_content = Column(
+            style=style.CENTERED_MAIN_CONTAINER,
+            children=[self.revenue_scan_form_step1],
+        )
         self.revenue_scan_form = ScrollContainer(
             content=Column(
                 style=style.CENTERED_MAIN_CONTAINER,
@@ -202,8 +208,11 @@ class RevenuesSection(BaseSection):
                         image=icon.SCANNER_IMG,
                         style=Pack(margin=(40, 0, 20, 0), width=96, height=96),
                     ),
-                    Row(children=[self.scan_activity, self.scan_info]),
-                    self.revenue_scan_form_step1,
+                    Row(
+                        style=Pack(align_items="center"),
+                        children=[self.scan_activity, self.scan_info],
+                    ),
+                    self.revenue_scan_form_content,
                     Row(
                         style=style.FORM_CONTAINER,
                         children=[
@@ -217,7 +226,7 @@ class RevenuesSection(BaseSection):
                                 "Inserir",
                                 style=style.RIGHTMOST_SIMPLE_BUTTON,
                                 enabled=False,
-                                on_press=self.add_scanned_revenues,
+                                on_press=self.add_selected_revenues,
                             ),
                         ],
                     ),
@@ -250,6 +259,9 @@ class RevenuesSection(BaseSection):
 
     def show_main_content(self, widget: Button | None = None):
         """Removes currently displayed elments and show a summary of revenues."""
+        self.revenue_scan_form_content.remove(self.revenue_scan_form_step2)
+        self.revenue_scan_form_content.remove(self.revenue_scan_form_step3)
+        self.revenue_scan_form_content.add(self.revenue_scan_form_step1)
         self.main_container.clear()
         if db.RevenueEntry().table_is_empty():
             self.main_container.style = style.CENTERED_MAIN_CONTAINER
@@ -336,11 +348,25 @@ class RevenuesSection(BaseSection):
         """Handles user interaction when adding data from processed documents."""
         self.scan_activity.start()
         self.scan_info.text = "Processando documentos, aguarde..."
-        nflogic.parse_dir(dir_path=dir_path, buy=False, full_parse=False)
-        self.scan_activity.stop()
-        asyncio.create_task(self._check_available_scanned_data())
+        try:
+            nflogic.parse_dir(dir_path=dir_path, buy=False, full_parse=False)
+        finally:
+            self.scan_activity.stop()
+            asyncio.create_task(self._check_available_scanned_data())
 
-    def add_scanned_revenues(self, widget: Table):
+    def select_scanned_revenues(self, widget: Button):
+        """Guides the user into selecting the desired subset of the scanned data."""
+        seller_names = nf.get_seller_names()
+        if len(seller_names) == 1:
+            self.revenue_scan_form_content.remove(self.revenue_scan_form_step1)
+            self.revenue_scan_form_content.add(self.revenue_scan_form_step2)
+        else:
+            self.revenue_scan_form_content.replace(
+                self.revenue_scan_form_step1,
+                self.revenue_scan_form_step3,
+            )
+
+    def add_selected_revenues(self, widget: Table):
         """Adds any data from the selected seller name to the database."""
 
     def change_sorting(self, widget: Button):
