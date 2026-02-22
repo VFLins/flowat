@@ -76,6 +76,14 @@ class RevenuesSection(BaseSection):
             ),
             description="Seleciona dados disponíveis\npara inserir",
         )
+        self.add_scanned_data_button = (
+            Button(
+                "Inserir",
+                style=style.RIGHTMOST_SIMPLE_BUTTON,
+                enabled=False,
+                on_press=self.add_selected_revenues,
+            ),
+        )
         self.revenues_source.sort_ascending = False
 
         self.first_interaction = Column(
@@ -230,12 +238,7 @@ class RevenuesSection(BaseSection):
                                 style=style.SIMPLE_BUTTON,
                                 on_press=self.show_main_content,
                             ),
-                            Button(
-                                "Inserir",
-                                style=style.RIGHTMOST_SIMPLE_BUTTON,
-                                enabled=False,
-                                on_press=self.add_selected_revenues,
-                            ),
+                            self.add_scanned_data_button,
                         ],
                     ),
                 ],
@@ -374,9 +377,12 @@ class RevenuesSection(BaseSection):
                 "Revise as transações que serão adicionada,\n",
                 'clique "Inserir" para confirmar',
             )
-            self.add_selected_data_button.enabled = True
+            self.add_scanned_data_button.input.enabled = True
             self.revenue_scan_form_content.remove(self.revenue_scan_form_step1)
             self.revenue_scan_form_content.add(self.revenue_scan_form_step3)
+
+    def _fetch_selected_revenues(self, widget: Table):
+        """Prepares the selected set of revenue data to be loaded."""
 
     def add_selected_revenues(self, widget: Table):
         """Adds any data from the selected seller name to the database."""
