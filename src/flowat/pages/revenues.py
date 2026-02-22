@@ -76,13 +76,11 @@ class RevenuesSection(BaseSection):
             ),
             description="Seleciona dados disponíveis\npara inserir",
         )
-        self.add_scanned_data_button = (
-            Button(
-                "Inserir",
-                style=style.RIGHTMOST_SIMPLE_BUTTON,
-                enabled=False,
-                on_press=self.add_selected_revenues,
-            ),
+        self.add_scanned_data_button = Button(
+            "Inserir",
+            style=style.RIGHTMOST_SIMPLE_BUTTON,
+            enabled=False,
+            on_press=self.add_selected_revenues,
         )
         self.revenues_source.sort_ascending = False
 
