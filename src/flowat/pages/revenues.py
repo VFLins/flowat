@@ -206,7 +206,7 @@ class RevenuesSection(BaseSection):
             input_widget=Table(
                 style=Pack(width=style.FORM_WIDTH, flex=1),
                 accessors=["name"],
-                on_activate=self.add_selected_revenues,
+                on_activate=self._on_select_seller_name,
             ),
             unstyled=True,
         )
@@ -380,14 +380,16 @@ class RevenuesSection(BaseSection):
         else:
             self._load_seller_data(seller_name=seller_names[0])
 
-    def add_selected_revenues(self, widget: Table, row: Any, **kwargs):
+    def add_selected_revenues(self, widget: Button):
         """Adds any data from the selected seller name to the database."""
+        new_data = self.revenue_scan_form_step3.input.data
+        print(f"INFO: adding transactions {[r for r in new_data]}")
+
+    def _on_select_seller_name(self, widget: Table, row: Any, **kwargs):
+        """Sends the user to a confirmation step, where new revenue data from the
+        selected seller is displayed.
+        """
         self._load_seller_data(seller_name=row.name)
-        self.scan_info.text = (
-            "Revise as transações que serão adicionadas,\n"
-            'clique "Inserir" para confirmar'
-        )
-        self.revenue_scan_form_content.add(self.revenue_scan_form_step3)
 
     def _load_seller_data(self, seller_name: nf.TableName):
         """Prepares the selected set of revenue data to be inserted."""
@@ -396,10 +398,9 @@ class RevenuesSection(BaseSection):
             'clique "Inserir" para confirmar'
         )
         new_data = [
-            {"data": r.DataHoraEmi, "valor": r.ValorProdutos}
+            {"data": r.DataHoraEmi, "valor": r.TotalProdutos}
             for r in nf.get_new_seller_data(seller_name=seller_name)
         ]
-        print(f"INFO: User selected data: {new_data}")
         self.revenue_scan_form_step3.input.data = new_data
         self.revenue_scan_form_content.remove(self.revenue_scan_form_step1)
         self.revenue_scan_form_content.remove(self.revenue_scan_form_step2)

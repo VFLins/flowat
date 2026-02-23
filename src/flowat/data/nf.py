@@ -84,7 +84,7 @@ def read_flowat_revenues(engine: Engine = db.DB_ENGINE) -> pd.DataFrame:
 
 
 @contextmanager
-def _set_temporary_table(*columns: Column, metadata: MetaData, engine: Engine) -> Table:
+def _set_temporary_table(*columns: Column, metadata: MetaData, engine: Engine) -> Generator[Table, None, None]:
     try:
         TMP_TABLE = Table(
             "FLOWAT_TEMPORARY",
@@ -121,12 +121,11 @@ def get_new_seller_data(
             stmt = (
                 select(
                     NF_TABLE.c.Id,
-                    TMP_TABLE.c.DocId,
+                    NF_TABLE.c.ChaveNFe,
                     NF_TABLE.c.DataHoraEmi,
                     NF_TABLE.c.TotalProdutos,
                 )
                 .where(not_(exists().where(TMP_TABLE.c.DocId == NF_TABLE.c.ChaveNFe)))
-                .join(TMP_TABLE, TMP_TABLE.c.DocId == NF_TABLE.c.ChaveNFe)
             )
             res = ses.execute(stmt)
             return res.all()
