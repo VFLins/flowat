@@ -40,6 +40,11 @@ class RevenuesSection(BaseSection):
             on_webview_load=self._on_reload_plot,
         )
         self.date_input = HorizontalDateForm(value=date.today())
+        self.value_input = TextInput(
+            style=Pack(width=int(style.FORM_WIDTH / 3)),
+            placeholder="0,00",
+            on_change=self._on_form_update,
+        )
         self.revenues_list = Table(
             style=Pack(flex=1),
             on_select=self._on_select_revenue,
@@ -164,16 +169,17 @@ class RevenuesSection(BaseSection):
                     unstyled=True,
                 ),
                 self.date_input.widget,
+                FormField(
+                    id="expense_form_value",
+                    container_style=Pack(width=style.FORM_WIDTH),
+                    input_widget=self.value_input,
+                    label="Valor",
+                    unstyled=True,
+                ),
                 Row(
-                    style=Pack(align_items="end"),
+                    style=Pack(width=style.FORM_WIDTH, align_items="end", margin_top=20),
                     children=[
-                        FormField(
-                            id="revenue_form_value",
-                            input_widget=TextInput(
-                                placeholder="0,00", on_change=self._on_form_update
-                            ),
-                            label="Valor",
-                        ),
+                        Box(style=Pack(flex=1)),  # push buttons to the right side
                         Button(
                             "Voltar",
                             style=style.SIMPLE_BUTTON,
@@ -183,7 +189,7 @@ class RevenuesSection(BaseSection):
                             "Inserir",
                             id="revenue_form_confirm",
                             enabled=False,
-                            style=style.SIMPLE_BUTTON,
+                            style=style.RIGHTMOST_SIMPLE_BUTTON,
                             on_press=self.add_revenue,
                         ),
                     ],
