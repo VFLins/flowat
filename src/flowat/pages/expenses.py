@@ -36,7 +36,7 @@ class ExpensesSection(BaseSection):
         super().__init__(app=app)
         self._ensure_expense_types()
         self.plot_expense = WebView(
-            style=Pack(width=515, height=160),
+            style=Pack(width=style.CONTENT_WIDTH, height=120),
             on_webview_load=self._on_reload_plot,
         )
         self.expense_type_input = Selection(
@@ -219,6 +219,7 @@ class ExpensesSection(BaseSection):
             style=Pack(align_items="center", flex=1, direction="column"),
             children=[self.main_container],
         )
+        self._refresh_displayed_data()
 
     def _on_reload_plot(self, widget: WebView, **kwargs):
         n_loads = getattr(widget, "_n_loads", 0)

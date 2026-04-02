@@ -15,7 +15,7 @@ class Flowat(toga.App):
         main_box = self.main_page.full_contents
         plot.base.ensure_plotlyjs()
 
-        self.main_window = toga.Window(title=self.formal_name, size=(700, 670))
+        self.main_window = toga.Window(title=self.formal_name, size=(600, 550))
         self.main_window.content = main_box
         self.main_window.show()
 
