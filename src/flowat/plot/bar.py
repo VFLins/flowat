@@ -44,6 +44,8 @@ def _set_layout(figure: Figure, x: list[str], y: list[float]) -> Figure:
 
 def colplot(x: list[str], y: list[float]) -> str:
     bg_color = get_colors()["BG_COLOR"]
+    x = x if len(x) > 0 else [datetime.today().strftime("%Y-%m")]
+    y = y if len(y) > 0 else [0.0]
     fig = px.bar(x=x, y=y)
     fig = _set_layout(figure=fig, x=x, y=y)
     fig.update_traces(hovertemplate=None, marker_color="#8d81ea")

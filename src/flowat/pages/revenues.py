@@ -444,6 +444,8 @@ class RevenuesSection(BaseSection):
             dates, sums = zip(*plot_data[:6])  # first 6 months starting from current
             print(f"INFO: Loading plot data: {dates=}, {sums=}")
             self.plot_revenue.content = colplot(x=dates, y=sums)
+        else:
+            self.plot_revenue.content = colplot(x=[], y=[])
 
     def _on_select_revenue(self, widget: Table):
         """Actions performed when an revenue is selected or `widget` loses selection."""
