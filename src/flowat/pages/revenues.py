@@ -229,8 +229,25 @@ class RevenuesSection(BaseSection):
         self.revenue_scan_form_step3 = FormField(
             label="",
             container_style=style.CENTERED_MAIN_CONTAINER,
-            input_widget=Table(
-                style=Pack(width=style.FORM_WIDTH, flex=1), headings=["Valor", "Data"]
+            input_widget=Column(
+                children=[
+                    Table(
+                        style=Pack(width=style.FORM_WIDTH, flex=1),
+                        headings=["Valor", "Data"],
+                    ),
+                    Row(
+                        style=Pack(width=style.FORM_WIDTH),
+                        children=[
+                            Box(style=Pack(flex=1)),  # push buttons to the right side
+                            Button(
+                                "Voltar",
+                                style=style.SIMPLE_BUTTON,
+                                on_press=self.show_main_content,
+                            ),
+                            self.add_scanned_data_button,
+                        ],
+                    ),
+                ],
             ),
             unstyled=True,
         )
@@ -239,18 +256,6 @@ class RevenuesSection(BaseSection):
             children=[
                 self.revenue_scan_form_head,
                 self.revenue_scan_form_step1,
-                Row(
-                    style=Pack(width=style.FORM_WIDTH),
-                    children=[
-                        Box(style=Pack(flex=1)),  # push buttons to the right side
-                        Button(
-                            "Voltar",
-                            style=style.SIMPLE_BUTTON,
-                            on_press=self.show_main_content,
-                        ),
-                        self.add_scanned_data_button,
-                    ],
-                ),
             ],
         )
         self.revenue_scan_form = ScrollContainer(content=self.revenue_scan_form_content)
@@ -379,7 +384,7 @@ class RevenuesSection(BaseSection):
         seller_names = nf.get_seller_names()
         self.revenue_scan_form_head.remove(self.scanner_image)
         if len(seller_names) > 1:
-            self.scan_info.text = "Escolha o nome do vendedor com m clique duplo"
+            self.scan_info.text = "Escolha o nome do vendedor com um clique duplo"
             self.revenue_scan_form_step2.input.data = seller_names
             self.revenue_scan_form_content.remove(self.revenue_scan_form_step1)
             self.revenue_scan_form_content.add(self.revenue_scan_form_step2)
