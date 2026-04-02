@@ -66,6 +66,10 @@ class RevenuesSection(BaseSection):
         )
         self.scan_activity = ActivityIndicator()
         self.scan_info = Label(text="", style=Pack(font_size=13))
+        self.scanner_image = ImageView(
+            image=icon.SCANNER_IMG,
+            style=Pack(margin=(40, 0, 20, 0), width=96, height=96),
+        )
         self.scan_docs_button = FormField(
             label="Ações",
             input_widget=Button(
@@ -196,6 +200,16 @@ class RevenuesSection(BaseSection):
                 ),
             ],
         )
+        self.revenue_scan_form_head = Column(
+            style=style.CENTERED_FORM_CONTAINER,
+            children=[
+                self.scanner_image,
+                Row(
+                    style=Pack(align_items="center"),
+                    children=[self.scan_activity, self.scan_info],
+                ),
+            ],
+        )
         self.revenue_scan_form_step1 = Row(
             style=style.CENTERED_FORM_CONTAINER,
             children=[self.scan_docs_button, self.select_scanned_revenues_button],
@@ -220,35 +234,25 @@ class RevenuesSection(BaseSection):
         )
         self.revenue_scan_form_content = Column(
             style=style.CENTERED_MAIN_CONTAINER,
-            children=[self.revenue_scan_form_step1],
+            children=[
+                self.revenue_scan_form_head,
+                self.revenue_scan_form_step1,
+                Row(
+                    style=Pack(width=style.FORM_WIDTH),
+                    children=[
+                        Box(style=Pack(flex=1)),  # push buttons to the right side
+                        Button(
+                            "Voltar",
+                            style=style.SIMPLE_BUTTON,
+                            on_press=self.show_main_content,
+                        ),
+                        self.add_scanned_data_button,
+                    ],
+                ),
+            ],
         )
         self.revenue_scan_form = ScrollContainer(
-            content=Column(
-                style=style.CENTERED_MAIN_CONTAINER,
-                children=[
-                    ImageView(
-                        image=icon.SCANNER_IMG,
-                        style=Pack(margin=(40, 0, 20, 0), width=96, height=96),
-                    ),
-                    Row(
-                        style=Pack(align_items="center"),
-                        children=[self.scan_activity, self.scan_info],
-                    ),
-                    self.revenue_scan_form_content,
-                    Row(
-                        style=Pack(width=style.FORM_WIDTH),
-                        children=[
-                            Box(style=Pack(flex=1)),  # push buttons to the right side
-                            Button(
-                                "Voltar",
-                                style=style.SIMPLE_BUTTON,
-                                on_press=self.show_main_content,
-                            ),
-                            self.add_scanned_data_button,
-                        ],
-                    ),
-                ],
-            )
+            content=self.revenue_scan_form_content
         )
         self.revenue_form = OptionContainer(
             style=style.MAIN_CONTAINER,
@@ -372,8 +376,9 @@ class RevenuesSection(BaseSection):
     def select_scanned_revenues(self, widget: Button):
         """Guides the user into selecting the desired subset of the scanned data."""
         seller_names = nf.get_seller_names()
+        self.revenue_scan_form_head.remove(self.scanner_image)
         if len(seller_names) > 1:
-            self.scan_info.text = "Escolha o nome do vendedor com um clique duplo"
+            self.scan_info.text = "Escolha o nome do vendedor com m clique duplo"
             self.revenue_scan_form_step2.input.data = seller_names
             self.revenue_scan_form_content.remove(self.revenue_scan_form_step1)
             self.revenue_scan_form_content.add(self.revenue_scan_form_step2)
