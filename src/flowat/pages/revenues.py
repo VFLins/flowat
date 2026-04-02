@@ -181,7 +181,9 @@ class RevenuesSection(BaseSection):
                     unstyled=True,
                 ),
                 Row(
-                    style=Pack(width=style.FORM_WIDTH, align_items="end", margin_top=20),
+                    style=Pack(
+                        width=style.FORM_WIDTH, align_items="end", margin_top=20
+                    ),
                     children=[
                         Box(style=Pack(flex=1)),  # push buttons to the right side
                         Button(
@@ -251,9 +253,7 @@ class RevenuesSection(BaseSection):
                 ),
             ],
         )
-        self.revenue_scan_form = ScrollContainer(
-            content=self.revenue_scan_form_content
-        )
+        self.revenue_scan_form = ScrollContainer(content=self.revenue_scan_form_content)
         self.revenue_form = OptionContainer(
             style=style.MAIN_CONTAINER,
             content=[
@@ -269,6 +269,7 @@ class RevenuesSection(BaseSection):
             style=Pack(align_items="center", flex=1, direction="row"),
             children=[self.main_container],
         )
+        self._refresh_displayed_data()
 
     def show_form(self, widget: Button):
         """Removes currently displayed elments and show a form where the user can
