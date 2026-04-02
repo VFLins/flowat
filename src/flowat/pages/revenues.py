@@ -490,6 +490,8 @@ class RevenuesSection(BaseSection):
             dates, sums = zip(*plot_data[:6])  # first 6 months starting from current
             print(f"INFO: Loading plot data: {dates=}, {sums=}")
             self.plot_revenue.content = colplot(x=dates, y=sums)
+        else:
+            self.plot_revenue.content = colplot(x=[], y=[])
 
     def _get_main_container(self):
         """Returns the 'common interaction' container, or 'first interaction' when
