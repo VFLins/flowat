@@ -68,7 +68,7 @@ class RevenuesSection(BaseSection):
         self.scan_info = Label(text="", style=Pack(font_size=13))
         self.scanner_image = ImageView(
             image=icon.SCANNER_IMG,
-            style=Pack(margin=(40, 0, 20, 0), width=96, height=96),
+            style=Pack(margin_bottom=20, width=96, height=96),
         )
         self.scan_docs_button = FormField(
             label="Ações",
@@ -202,14 +202,15 @@ class RevenuesSection(BaseSection):
                 ),
             ],
         )
+        self.scan_status_section = Row(
+            style=Pack(align_items="center"),
+            children=[self.scan_activity, self.scan_info],
+        )
         self.revenue_scan_form_head = Column(
-            style=style.CENTERED_FORM_CONTAINER,
+            style=Pack(align_items="center", margin_top=20, margin_bottom=20),
             children=[
                 self.scanner_image,
-                Row(
-                    style=Pack(align_items="center"),
-                    children=[self.scan_activity, self.scan_info],
-                ),
+                self.scan_status_section,
             ],
         )
         self.revenue_scan_form_step1 = Row(
@@ -528,6 +529,8 @@ class RevenuesSection(BaseSection):
         self.revenue_scan_form_content.remove(self.revenue_scan_form_step2)
         self.revenue_scan_form_content.remove(self.revenue_scan_form_step3)
         self.revenue_scan_form_content.add(self.revenue_scan_form_step1)
+        self.revenue_scan_form_head.clear()
+        self.revenue_scan_form_head.add(self.scanner_image, self.scan_status_section)
         self.add_scanned_data_button.enabled = False
 
     def _get_revenue_form_entry(self) -> db.RevenueEntry:
