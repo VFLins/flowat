@@ -11,11 +11,12 @@ from sqlalchemy import (
     func,
     text,
     Column,
+    Row,
     String,
 )
 from sqlalchemy.orm import Session
 from contextlib import contextmanager
-from typing import Generator
+from typing import Generator, Sequence
 import pandas as pd
 import nflogic
 
@@ -102,7 +103,7 @@ def get_new_seller_data(
     seller_name: TableName,
     internal_engine: Engine = db.DB_ENGINE,
     nf_engine: Engine = NFLOGIC_ENGINE,
-) -> Generator[tuple, None, None]:
+) -> Sequence[Row]:
     """Get a list of rows collected from nflogic's database that is not present in a
     flowat table.
     """
