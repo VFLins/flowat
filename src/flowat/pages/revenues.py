@@ -92,6 +92,10 @@ class RevenuesSection(BaseSection):
             enabled=False,
             on_press=self.add_selected_revenues,
         )
+        self.selected_scanned_revenues_table = Table(
+            style=Pack(width=style.FORM_WIDTH, flex=1),
+            headings=["Valor", "Data"],
+        )
         self.revenues_source.sort_ascending = False
 
         self.first_interaction = Column(
@@ -232,10 +236,7 @@ class RevenuesSection(BaseSection):
             container_style=style.CENTERED_MAIN_CONTAINER,
             input_widget=Column(
                 children=[
-                    Table(
-                        style=Pack(width=style.FORM_WIDTH, flex=1),
-                        headings=["Valor", "Data"],
-                    ),
+                    self.selected_scanned_revenues_table,
                     Row(
                         style=Pack(width=style.FORM_WIDTH),
                         children=[
@@ -394,7 +395,7 @@ class RevenuesSection(BaseSection):
 
     def add_selected_revenues(self, widget: Button):
         """Adds any data from the selected seller name to the database."""
-        new_data = self.revenue_scan_form_step3.input.data
+        new_data = self.selected_scanned_revenues_table.data
         print(f"INFO: adding transactions {[r for r in new_data]}")
 
     def _on_select_seller_name(self, widget: Table, row: Any, **kwargs):
@@ -413,7 +414,7 @@ class RevenuesSection(BaseSection):
             {"data": r.DataHoraEmi, "valor": r.TotalProdutos}
             for r in nf.get_new_seller_data(seller_name=seller_name)
         ]
-        self.revenue_scan_form_step3.input.data = new_data
+        self.selected_scanned_revenues_table.data = new_data
         self.revenue_scan_form_content.remove(self.revenue_scan_form_step1)
         self.revenue_scan_form_content.remove(self.revenue_scan_form_step2)
         self.revenue_scan_form_content.add(self.revenue_scan_form_step3)
