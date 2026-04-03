@@ -211,7 +211,7 @@ class RevenuesSection(BaseSection):
             children=[self.scan_activity, self.scan_info],
         )
         self.revenue_scan_form_head = Column(
-            style=Pack(align_items="center", margin_top=20, margin_bottom=20),
+            style=Pack(align_items="center", margin_top=20),
             children=[
                 self.scanner_image,
                 self.scan_status_section,
@@ -233,8 +233,9 @@ class RevenuesSection(BaseSection):
         )
         self.revenue_scan_form_step3 = FormField(
             label="",
-            container_style=style.CENTERED_MAIN_CONTAINER,
+            container_style=style.CENTERED_FORM_SECTION,
             input_widget=Column(
+                style=style.FORM_SECTION,
                 children=[
                     self.selected_scanned_revenues_table,
                     Row(
@@ -411,7 +412,10 @@ class RevenuesSection(BaseSection):
             'clique "Inserir" para confirmar'
         )
         new_data = [
-            {"data": r.DataHoraEmi, "valor": r.TotalProdutos}
+            {
+                "valor": f"{r.TotalProdutos:.2f}".replace(".", ","),
+                "data": fmt.StringFullDateTime(r.DataHoraEmi).datetime,
+            }
             for r in nf.get_new_seller_data(seller_name=seller_name)
         ]
         self.selected_scanned_revenues_table.data = new_data

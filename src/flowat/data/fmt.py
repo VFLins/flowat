@@ -1,7 +1,13 @@
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from typing import Any
+from datetime import datetime
 
 from flowat import config
+
+
+class _Manipulator:
+    def __init__(self, value: Any):
+        self._value = value
 
 
 class _Parser:
@@ -64,11 +70,30 @@ class StringToCurrency(_Formatter):
         """Returns a string that explains the reason this input is invalid,
         or None otherwise.
         """
-        super().invalid_reason()
+        super().invalid_reason
+
         if self.value == 0:
             return f"'{self._field_name}' não pode ser zero"
         if self.value > config.MaxAllowedValue.get():
             return f"'{self._field_name}' acima do permitido"
+
+
+class StringFullDateTime(_Manipulator):
+    def __init__(self, value: str):
+        super().__init__(value=value)
+        self._parsed_value: datetime = datetime.strptime(value, "%Y-%m-%d %H:%M:%S %z")
+
+    @property
+    def date(self):
+        return self._parsed_value.strftime("%d/%m/%Y")
+
+    @property
+    def time(self):
+        return self._parsed_value.strftime("%H:%M:%S")
+
+    @property
+    def datetime(self):
+        return self._parsed_value.strftime("%d/%m/%Y às %H:%M")
 
 
 class StringToBarcodeITF25(_Formatter):
