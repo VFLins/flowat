@@ -218,7 +218,6 @@ class RevenuesSection(BaseSection):
             ],
         )
         self.revenue_scan_form_step1 = Row(
-            style=style.CENTERED_FORM_CONTAINER,
             children=[self.scan_docs_button, self.select_scanned_revenues_button],
         )
         self.revenue_scan_form_step2 = FormField(
