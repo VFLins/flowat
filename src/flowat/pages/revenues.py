@@ -270,13 +270,18 @@ class RevenuesSection(BaseSection):
             ],
         )
         self.main_container = Box(
-            style=style.CENTERED_MAIN_CONTAINER,
             children=[self.first_interaction],
         )
+        """Holds any interactive container of this section and handles vertical
+        alignment. It's styling is defined externally via function call.
+        """
         self.full_contents = Box(
             style=Pack(align_items="center", flex=1, direction="row"),
             children=[self.main_container],
         )
+        """Always holds only `RevenuesSection.main_container` and handles horizontal
+        alignment. This is the highest level container.
+        """
         self._refresh_displayed_data()
 
     def show_form(self, widget: Button):
@@ -285,6 +290,7 @@ class RevenuesSection(BaseSection):
         """
         self.main_container.clear()
         self.main_container.add(self.revenue_form)
+        self.main_container.style = Pack(align_items="center", direction="row")
         asyncio.create_task(self._check_available_scanned_data())
 
     def show_main_content(self, widget: Button | None = None):
