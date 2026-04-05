@@ -156,8 +156,8 @@ class RevenuesSection(BaseSection):
                 ),
             ],
         )
-        self.revenue_input_form = Column(
-            style=style.MAIN_CONTAINER,
+        self.revenue_input_form_content = Column(
+            style=style.CENTERED_MAIN_CONTAINER,
             children=[
                 FormField(
                     id="revenue_form_type",
@@ -205,6 +205,9 @@ class RevenuesSection(BaseSection):
                     ],
                 ),
             ],
+        )
+        self.revenue_input_form = ScrollContainer(
+            content=self.revenue_input_form_content
         )
         self.scan_status_section = Row(
             style=Pack(align_items="center"),
