@@ -81,19 +81,22 @@ class StringToCurrency(_Formatter):
 class StringFullDateTime(_Manipulator):
     def __init__(self, value: str):
         super().__init__(value=value)
-        self._parsed_value: datetime = datetime.strptime(value, "%Y-%m-%d %H:%M:%S %z")
+
+    @property
+    def parsed_value(self) -> datetime:
+        return datetime.strptime(self._value, "%Y-%m-%d %H:%M:%S %z")
 
     @property
     def date(self):
-        return self._parsed_value.strftime("%d/%m/%Y")
+        return self.parsed_value.strftime("%d/%m/%Y")
 
     @property
     def time(self):
-        return self._parsed_value.strftime("%H:%M:%S")
+        return self.parsed_value.strftime("%H:%M:%S")
 
     @property
     def datetime(self):
-        return self._parsed_value.strftime("%d/%m/%Y às %H:%M")
+        return self.parsed_value.strftime("%d/%m/%Y às %H:%M")
 
 
 class StringToBarcodeITF25(_Formatter):

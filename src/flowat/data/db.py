@@ -231,8 +231,9 @@ class DeclaredTable(DeclarativeBase):
         """Validates and adds a new row in the database with it's own data."""
         cls = type(self)
         with Session(bind=engine) as ses:
-            stmt = insert(cls).values(**self.data)
-            ses.execute(stmt)
+            stmt = insert(cls).values(**self.data).returning(cls.Id)
+            entry_id = ses.execute(stmt).scalar()
+            self.Id = entry_id
             ses.commit()
 
     def delete(self, engine: Engine = DB_ENGINE):

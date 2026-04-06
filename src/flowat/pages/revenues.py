@@ -28,6 +28,7 @@ from flowat.form.date import HorizontalDateForm
 
 class RevenuesSection(BaseSection):
     SELECTED_REVENUE = db.RevenueEntry()
+    SELECTED_SELLER = nf.TableName("") # TODO: Read from config
     revenues_source = source.RevenuesSource()
     agg_revenues_source = source.AggregatedRevenuesSource()
     revenue_type_source = source.RevenueTypeSource()
@@ -404,8 +405,21 @@ class RevenuesSection(BaseSection):
 
     def add_selected_revenues(self, widget: Button):
         """Adds any data from the selected seller name to the database."""
-        new_data = self.selected_scanned_revenues_table.data
-        print(f"INFO: adding transactions {[r for r in new_data]}")
+        new_data = nf.get_new_seller_data(seller_name=self.SELECTED_SELLER)
+        for row in new_data:
+            print(f"INFO: adding transaction {row}")
+            revenue = db.RevenueEntry(
+                IdRevenueType=None,
+                TimeStamp=datetime.now(),
+                Description=f"Transação escaneada de {self.SELECTED_SELLER}",
+                TransactionDate=fmt.StringFullDateTime(row.DataHoraEmi).parsed_value,
+                TransactionValue=row.TotalProdutos,
+            )
+            revenue.write()
+            scanned_ref = db.ScannedInvoiceFile(
+                DocumentIdentifier=row.ChaveNFe,
+                IdRevenueEntry=revenue.Id,
+            )
 
     def _on_select_seller_name(self, widget: Table, row: Any, **kwargs):
         """Sends the user to a confirmation step, where new revenue data from the
@@ -426,6 +440,7 @@ class RevenuesSection(BaseSection):
             }
             for r in nf.get_new_seller_data(seller_name=seller_name)
         ]
+        self.SELECTED_SELLER = seller_name
         self.selected_scanned_revenues_table.data = new_data
         self.revenue_scan_form_content.remove(self.revenue_scan_form_step1)
         self.revenue_scan_form_content.remove(self.revenue_scan_form_step2)
