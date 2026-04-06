@@ -28,7 +28,7 @@ from flowat.form.date import HorizontalDateForm
 
 class RevenuesSection(BaseSection):
     SELECTED_REVENUE = db.RevenueEntry()
-    SELECTED_SELLER = nf.TableName("") # TODO: Read from config
+    SELECTED_SELLER = nf.TableName("")  # TODO: Read from config
     revenues_source = source.RevenuesSource()
     agg_revenues_source = source.AggregatedRevenuesSource()
     revenue_type_source = source.RevenueTypeSource()
@@ -37,7 +37,7 @@ class RevenuesSection(BaseSection):
         super().__init__(app=app)
         self._ensure_revenue_types()
         self.plot_revenue = WebView(
-            style=Pack(width=515, height=160),
+            style=Pack(width=515, height=120),
             on_webview_load=self._on_reload_plot,
         )
         self.date_input = HorizontalDateForm(value=date.today())
@@ -420,6 +420,9 @@ class RevenuesSection(BaseSection):
                 DocumentIdentifier=row.ChaveNFe,
                 IdRevenueEntry=revenue.Id,
             )
+            scanned_ref.write()
+        self._refresh_displayed_data()
+        self.show_main_content(widget=widget)
 
     def _on_select_seller_name(self, widget: Table, row: Any, **kwargs):
         """Sends the user to a confirmation step, where new revenue data from the
