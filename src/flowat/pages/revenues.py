@@ -4,6 +4,7 @@ from toga.widgets.selection import Selection
 from toga.widgets.textinput import TextInput
 from toga.widgets.webview import WebView
 from toga.widgets.button import Button
+from toga.widgets.switch import Switch
 from toga.widgets.table import Table
 from toga.widgets.label import Label
 from toga.widgets.box import Box, Column, Row
@@ -11,6 +12,7 @@ from toga.widgets.optioncontainer import OptionContainer
 from toga.widgets.scrollcontainer import ScrollContainer
 from toga.dialogs import InfoDialog, ConfirmDialog, SelectFolderDialog
 from toga.style import Pack
+from toga.platform import current_platform
 
 from datetime import date, datetime
 from typing import Any
@@ -103,6 +105,10 @@ class RevenuesSection(BaseSection):
             multiple_select=True,
             style=Pack(width=style.FORM_WIDTH, flex=1),
             headings=["Valor", "Data"],
+        )
+        self.select_all_scanned_revenues_switch = Switch(
+            "Selecionar tudo",
+            on_change=self.change_scanned_revenues_selection,
         )
         self.revenues_source.sort_ascending = False
 
@@ -251,6 +257,7 @@ class RevenuesSection(BaseSection):
             input_widget=Column(
                 style=style.FORM_SECTION,
                 children=[
+                    self.select_all_scanned_revenues_switch,
                     self.selected_scanned_revenues_table,
                     Row(
                         style=Pack(width=style.FORM_WIDTH),
@@ -416,7 +423,7 @@ class RevenuesSection(BaseSection):
 
     def add_selected_revenues(self, widget: Button):
         """Adds any data from the selected seller name to the database."""
-        new_data = nf.get_new_seller_data(seller_name=self.SELECTED_SELLER)
+        new_data = self.selected_scanned_revenues_table.selection
         for row in new_data:
             print(f"INFO: adding transaction {row}")
             revenue = db.RevenueEntry(
@@ -449,6 +456,7 @@ class RevenuesSection(BaseSection):
         )
         new_data = [
             {
+                "id": r.Id,
                 "valor": f"{r.TotalProdutos:.2f}".replace(".", ","),
                 "data": fmt.StringFullDateTime(r.DataHoraEmi).datetime,
             }
@@ -606,3 +614,20 @@ class RevenuesSection(BaseSection):
             if categ not in current_data:
                 rt = db.RevenueType(Name=categ)
                 rt.write()
+
+    def change_scanned_revenues_selection(self, widget: Switch):
+        table = self.selected_scanned_revenues_table
+        native_table = table._impl.native
+        if widget.value:
+            if current_platform == "linux":
+                selection = native_table.get_child().get_selection()
+                selection.select_all()
+            elif current_platform == "windows":
+                for i in range(native_table.Items.Count):
+                    native_table.Items[i].Selected = True
+        else:
+            if current_platform == "linux":
+                native_table.get_child().get_selection().unselect_all()
+            elif current_platform == "windows":
+                native_table.SelectedIndices.Clear()
+        print(table.selection)
