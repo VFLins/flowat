@@ -29,6 +29,12 @@ from flowat.form.date import HorizontalDateForm
 class RevenuesSection(BaseSection):
     SELECTED_REVENUE = db.RevenueEntry()
     SELECTED_SELLER = nf.TableName("")  # TODO: Read from config
+    REVENUE_CATEGORIES = [
+        "Recebível À Vista",
+        "Parcela De Recebível À Prazo",
+        "Documento Escaneado",
+    ]
+    HIDDEN_REVENUE_CATEGORIES = ["Documento Escaneado"]
     revenues_source = source.RevenuesSource()
     agg_revenues_source = source.AggregatedRevenuesSource()
     revenue_type_source = source.RevenueTypeSource()
@@ -165,7 +171,11 @@ class RevenuesSection(BaseSection):
                     container_style=Pack(width=style.FORM_WIDTH),
                     input_widget=Selection(
                         on_change=self._on_form_update,
-                        items=[r.Name for r in self.revenue_type_source.current_data],
+                        items=[
+                            r
+                            for r in self.REVENUE_CATEGORIES
+                            if r not in self.HIDDEN_REVENUE_CATEGORIES
+                        ],
                     ),
                     label="Tipo",
                     unstyled=True,
@@ -409,7 +419,7 @@ class RevenuesSection(BaseSection):
         for row in new_data:
             print(f"INFO: adding transaction {row}")
             revenue = db.RevenueEntry(
-                IdRevenueType=None,
+                IdRevenueType=3,
                 TimeStamp=datetime.now(),
                 Description=f"Transação escaneada de {self.SELECTED_SELLER}",
                 TransactionDate=fmt.StringFullDateTime(row.DataHoraEmi).parsed_value,
@@ -590,9 +600,8 @@ class RevenuesSection(BaseSection):
             self._app.widgets["revenue_form_confirm"].enabled = False
 
     def _ensure_revenue_types(self):
-        revenue_categories = ["Recebível À Vista", "Parcela De Recebível À Prazo"]
         current_data = [r.Name for r in self.revenue_type_source.current_data]
-        for categ in revenue_categories:
+        for categ in self.REVENUE_CATEGORIES:
             if categ not in current_data:
                 rt = db.RevenueType(Name=categ)
                 rt.write()
