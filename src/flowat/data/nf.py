@@ -85,7 +85,9 @@ def read_flowat_revenues(engine: Engine = db.DB_ENGINE) -> pd.DataFrame:
 
 
 @contextmanager
-def _set_temporary_table(*columns: Column, metadata: MetaData, engine: Engine) -> Generator[Table, None, None]:
+def _set_temporary_table(
+    *columns: Column, metadata: MetaData, engine: Engine
+) -> Generator[Table, None, None]:
     try:
         TMP_TABLE = Table(
             "FLOWAT_TEMPORARY",
@@ -110,7 +112,7 @@ def get_new_seller_data(
     registered_docs = _get_registered_document_identifiers(engine=internal_engine)
     NF_TABLE = _get_table_by_name(table_name=seller_name.table_name, engine=nf_engine)
     # NOTE: use temporary table INSERT to avoid using a SELECT statement with a large
-    # NOT IN clause
+    #       NOT IN clause
     with Session(bind=nf_engine) as ses:
         with _set_temporary_table(
             Column("DocId", String, primary_key=True),
@@ -119,15 +121,12 @@ def get_new_seller_data(
         ) as TMP_TABLE:
             if registered_docs:
                 ses.execute(insert(TMP_TABLE), [{"DocId": i} for i in registered_docs])
-            stmt = (
-                select(
-                    NF_TABLE.c.Id,
-                    NF_TABLE.c.ChaveNFe,
-                    NF_TABLE.c.DataHoraEmi,
-                    NF_TABLE.c.TotalProdutos,
-                )
-                .where(not_(exists().where(TMP_TABLE.c.DocId == NF_TABLE.c.ChaveNFe)))
-            )
+            stmt = select(
+                NF_TABLE.c.Id,
+                NF_TABLE.c.ChaveNFe,
+                NF_TABLE.c.DataHoraEmi,
+                NF_TABLE.c.TotalProdutos,
+            ).where(not_(exists().where(TMP_TABLE.c.DocId == NF_TABLE.c.ChaveNFe)))
             res = ses.execute(stmt)
             return res.all()
 
@@ -165,3 +164,16 @@ def get_seller_names(engine: Engine = NFLOGIC_ENGINE) -> list[TableName]:
         for name in insp.get_table_names()
         if name[:6] == "VENDA_"
     ]
+
+
+def get_processed_document(
+    seller_name: TableName, row_id: int, engine: Engine = NFLOGIC_ENGINE
+) -> Row:
+    """Get data from a single processed document."""
+    NF_TABLE = _get_table_by_name(table_name=seller_name.table_name, engine=engine)
+    with Session(bind=engine) as ses:
+        stmt = select(NF_TABLE).where(NF_TABLE.c.Id == row_id)
+        res = ses.execute(stmt).first()
+        if res is None:
+            raise ValueError(f"{row_id=} not present in '{NF_TABLE.name}.Id'.")
+        return res

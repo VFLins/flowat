@@ -105,6 +105,7 @@ class RevenuesSection(BaseSection):
             multiple_select=True,
             style=Pack(width=style.FORM_WIDTH, flex=1),
             headings=["Valor", "Data"],
+            on_select=self._scanned_revenue_data_selection,
         )
         self.select_all_scanned_revenues_switch = Switch(
             "Selecionar tudo",
@@ -424,18 +425,23 @@ class RevenuesSection(BaseSection):
     def add_selected_revenues(self, widget: Button):
         """Adds any data from the selected seller name to the database."""
         new_data = self.selected_scanned_revenues_table.selection
+        if not new_data:
+            return
         for row in new_data:
+            data = nf.get_processed_document(
+                seller_name=self.SELECTED_SELLER, row_id=row.id
+            )
             print(f"INFO: adding transaction {row}")
             revenue = db.RevenueEntry(
                 IdRevenueType=3,
                 TimeStamp=datetime.now(),
                 Description="Receita",
-                TransactionDate=fmt.StringFullDateTime(row.DataHoraEmi).parsed_value,
-                TransactionValue=row.TotalProdutos,
+                TransactionDate=fmt.StringFullDateTime(data.DataHoraEmi).parsed_value,
+                TransactionValue=data.TotalProdutos,
             )
             revenue.write()
             scanned_ref = db.ScannedInvoiceFile(
-                DocumentIdentifier=row.ChaveNFe,
+                DocumentIdentifier=data.ChaveNFe,
                 IdRevenueEntry=revenue.Id,
             )
             scanned_ref.write()
@@ -450,11 +456,14 @@ class RevenuesSection(BaseSection):
 
     def _load_seller_data(self, seller_name: nf.TableName):
         """Prepares the selected set of revenue data to be inserted."""
+        self.SELECTED_SELLER = seller_name
         self.scan_info.text = (
             "Revise as transações que serão adicionadas,\n"
             'clique "Inserir" para confirmar'
         )
-        new_data = [
+        table = self.selected_scanned_revenues_table
+        form = self.revenue_scan_form_content
+        table.data = [
             {
                 "id": r.Id,
                 "valor": f"{r.TotalProdutos:.2f}".replace(".", ","),
@@ -462,12 +471,12 @@ class RevenuesSection(BaseSection):
             }
             for r in nf.get_new_seller_data(seller_name=seller_name)
         ]
-        self.SELECTED_SELLER = seller_name
-        self.selected_scanned_revenues_table.data = new_data
-        self.revenue_scan_form_content.remove(self.revenue_scan_form_step1)
-        self.revenue_scan_form_content.remove(self.revenue_scan_form_step2)
-        self.revenue_scan_form_content.add(self.revenue_scan_form_step3)
-        self.add_scanned_data_button.enabled = True
+        form.remove(self.revenue_scan_form_step1)
+        form.remove(self.revenue_scan_form_step2)
+        form.add(self.revenue_scan_form_step3)
+        self._select_all_rows(table=table)
+        self.select_all_scanned_revenues_switch.value = True
+        self.add_scanned_data_button.enabled = len(table.data) > 0
 
     def change_sorting(self, widget: Button):
         sort_options = ["Adic. ↓", "Adic. ↑", "Venc. ↓", "Venc. ↑"]
@@ -617,17 +626,37 @@ class RevenuesSection(BaseSection):
 
     def change_scanned_revenues_selection(self, widget: Switch):
         table = self.selected_scanned_revenues_table
-        native_table = table._impl.native
         if widget.value:
-            if current_platform == "linux":
+            self._select_all_rows(table=table)
+        else:
+            self._unselect_all_rows(table=table)
+        print(table.selection)
+
+    def _select_all_rows(self, table: Table):
+        native_table = table._impl.native
+        match current_platform:
+            case "linux":
                 selection = native_table.get_child().get_selection()
                 selection.select_all()
-            elif current_platform == "windows":
+            case "windows":
                 for i in range(native_table.Items.Count):
                     native_table.Items[i].Selected = True
-        else:
-            if current_platform == "linux":
+            case _:
+                raise NotImplementedError(
+                    f"Select all rows from table is unsupported on {current_platform=}"
+                )
+
+    def _unselect_all_rows(self, table: Table):
+        native_table = table._impl.native
+        match current_platform:
+            case "linux":
                 native_table.get_child().get_selection().unselect_all()
-            elif current_platform == "windows":
+            case "windows":
                 native_table.SelectedIndices.Clear()
-        print(table.selection)
+            case _:
+                raise NotImplementedError(
+                    f"Unselect all rows from table is unsupported on {current_platform=}"
+                )
+
+    def _scanned_revenue_data_selection(self, widget: Table):
+        self.add_scanned_data_button.enabled = len(widget.selection) > 0
