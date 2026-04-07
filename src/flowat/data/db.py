@@ -295,7 +295,7 @@ class RevenueType(DeclaredTable):
 class RevenueEntry(DeclaredTable):
     __tablename__ = "revenues"
     RevenueTypeRelation: Mapped["RevenueType"] = relationship(
-        back_populates="RevenueEntryRelation"
+        back_populates="RevenueEntryRelation", cascade="all, delete"
     )
 
     IdRevenueType: Mapped[int] = Column("IdRevenueType", ForeignKey("revenue_types.Id"))
