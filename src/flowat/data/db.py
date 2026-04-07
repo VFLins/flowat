@@ -19,6 +19,7 @@ from sqlalchemy import (
     text,
     func,
     types,
+    event,
 )
 from sqlalchemy.orm import (
     Mapped,
@@ -26,6 +27,7 @@ from sqlalchemy.orm import (
     relationship,
     Session,
 )
+from sqlalchemy.engine import Engine
 from typing import List, Iterable, Literal, Any, Self, Dict
 from collections import namedtuple
 from datetime import datetime
@@ -48,6 +50,13 @@ DATA_PATH = Path(FLOWAT_FILES_PATH, "data")
 DATA_PATH.mkdir(exist_ok=True)
 DB_FILE = Path(DATA_PATH, "database.db")
 DB_ENGINE = create_engine(f"sqlite:///{DB_FILE}", echo=False)
+
+
+@event.listens_for(Engine, "connect")
+def enable_sqlite_fk(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 
 
 # DATA TYPES
@@ -295,7 +304,9 @@ class RevenueType(DeclaredTable):
 class RevenueEntry(DeclaredTable):
     __tablename__ = "revenues"
     RevenueTypeRelation: Mapped["RevenueType"] = relationship(
-        back_populates="RevenueEntryRelation", cascade="all, delete"
+        "ScannedInvoiceFile",
+        back_populates="ScannedRevenueEntryRelation",
+        cascade="all, delete",
     )
 
     IdRevenueType: Mapped[int] = Column("IdRevenueType", ForeignKey("revenue_types.Id"))
@@ -315,10 +326,16 @@ class RevenueEntry(DeclaredTable):
 
 class ScannedInvoiceFile(DeclaredTable):
     __tablename__ = "scanned_invoice_files"
-    ScannedRevenueEntryRelation: Mapped["RevenueEntry"] = relationship()
+    ScannedRevenueEntryRelation: Mapped["RevenueEntry"] = relationship(
+        "RevenueEntry", back_populates="RevenueTypeRelation"
+    )
 
-    DocumentIdentifier = Column("DocumentIdentifier", RequiredText, nullable=False)
-    IdRevenueEntry: Mapped[int] = Column("IdRevenueEntry", ForeignKey("revenues.Id"))
+    DocumentIdentifier = Column(
+        "DocumentIdentifier", RequiredText, nullable=False, unique=True
+    )
+    IdRevenueEntry: Mapped[int] = Column(
+        "IdRevenueEntry", ForeignKey("revenues.Id", ondelete="CASCADE"), unique=True
+    )
 
 
 DeclaredTable.metadata.create_all(DB_ENGINE)
