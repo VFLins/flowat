@@ -100,6 +100,7 @@ class RevenuesSection(BaseSection):
             on_press=self.add_selected_revenues,
         )
         self.selected_scanned_revenues_table = Table(
+            multiple_select=True,
             style=Pack(width=style.FORM_WIDTH, flex=1),
             headings=["Valor", "Data"],
         )
@@ -421,7 +422,7 @@ class RevenuesSection(BaseSection):
             revenue = db.RevenueEntry(
                 IdRevenueType=3,
                 TimeStamp=datetime.now(),
-                Description=f"Transação escaneada de {self.SELECTED_SELLER}",
+                Description="Receita",
                 TransactionDate=fmt.StringFullDateTime(row.DataHoraEmi).parsed_value,
                 TransactionValue=row.TotalProdutos,
             )
