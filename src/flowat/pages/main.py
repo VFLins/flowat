@@ -6,17 +6,15 @@ from toga.style import Pack
 from .base import BaseSection
 from .expenses import ExpensesSection
 from .revenues import RevenuesSection
+from .report import ReportSection
 from flowat.const import style, icon
 
 
 class MainSection(BaseSection):
-
-    _BUTTON_IDS = [
-        "expenses_button",
-        "revenues_button",
-        "reports_button",
-        "preferences_button",
-    ]
+    EXPENSES_BUTTON = "expenses_button"
+    REVENUES_BUTTON = "revenues_button"
+    REPORTS_BUTTON = "reports_button"
+    PREFERENCES_BUTTON = "preferences_button"
 
     def __init__(self, app):
         super().__init__(app=app)
@@ -25,7 +23,7 @@ class MainSection(BaseSection):
             children=[
                 Button(
                     icon=icon.MONEY_OUT,
-                    id=self._BUTTON_IDS[0],
+                    id=self.EXPENSES_BUTTON,
                     style=style.BIG_SQUARE_BUTTON,
                     on_press=self.set_context_content,
                     enabled=False,
@@ -38,7 +36,7 @@ class MainSection(BaseSection):
             children=[
                 Button(
                     icon=icon.MONEY_IN,
-                    id=self._BUTTON_IDS[1],
+                    id=self.REVENUES_BUTTON,
                     style=style.BIG_SQUARE_BUTTON,
                     on_press=self.set_context_content,
                 ),
@@ -50,7 +48,7 @@ class MainSection(BaseSection):
             children=[
                 Button(
                     icon=icon.BAR_CHART,
-                    id=self._BUTTON_IDS[2],
+                    id=self.REPORTS_BUTTON,
                     style=style.BIG_SQUARE_BUTTON,
                     on_press=self.set_context_content,
                 ),
@@ -62,7 +60,7 @@ class MainSection(BaseSection):
             children=[
                 Button(
                     icon=icon.SETTINGS,
-                    id=self._BUTTON_IDS[3],
+                    id=self.PREFERENCES_BUTTON,
                     style=style.BIG_SQUARE_BUTTON,
                     on_press=self.set_context_content,
                 ),
@@ -72,6 +70,7 @@ class MainSection(BaseSection):
 
         self.expense_section = ExpensesSection(app=self._app)
         self.revenue_section = RevenuesSection(app=self._app)
+        self.report_section = ReportSection(app=self._app)
 
         self.buttons_container = Row(
             style=Pack(margin=30),
@@ -82,32 +81,35 @@ class MainSection(BaseSection):
                 self.preferences_button,
             ],
         )
-        self.context_container = self.expense_section.full_contents
+        self.context_container = Box(
+            style=Pack(direction="column", align_items="center", flex=1),
+            children=[self.expense_section.full_contents],
+        )
         self.full_contents = Box(
             style=Pack(align_items="center", flex=1, direction="column"),
             children=[self.buttons_container, self.context_container],
         )
 
     def set_context_content(self, widget: Button):
-        other_buttons = [
-            self._app.widgets[id] for id in self._BUTTON_IDS if id != widget.id
-        ]
-        sections_contents = [
-            self.expense_section.full_contents,
-            self.revenue_section.full_contents,
-        ]
-        for btn in other_buttons:
-            btn.enabled = True  # enable other buttons
-        widget.enabled = False  # disable clicked button
-        # remove previous section content
-        self.full_contents.remove(*sections_contents)
-        # add current section content
-        if widget.id == self._BUTTON_IDS[1]:
-            clicked_section = self.revenue_section
-        elif widget.id == self._BUTTON_IDS[0]:
-            clicked_section = self.expense_section
-        else:
-            clicked_section = BaseSection(app=self._app)
-        self.full_contents.add(clicked_section.full_contents)
+        buttons = (
+            self.EXPENSES_BUTTON,
+            self.REVENUES_BUTTON,
+            self.REPORTS_BUTTON,
+            self.PREFERENCES_BUTTON,
+        )
+        # INFO: enable other buttons, disable clicked
+        for btn_id in buttons:
+            self._app.widgets[btn_id].enabled = btn_id != widget.id
+        self.context_container.clear()
+        match widget.id:
+            case self.REPORTS_BUTTON:
+                clicked_section = self.report_section
+            case self.REVENUES_BUTTON:
+                clicked_section = self.revenue_section
+            case self.EXPENSES_BUTTON:
+                clicked_section = self.expense_section
+            case _:
+                clicked_section = BaseSection(app=self._app)
+        self.context_container.add(clicked_section.full_contents)
         clicked_section.show_main_content()
         self.full_contents.refresh()
