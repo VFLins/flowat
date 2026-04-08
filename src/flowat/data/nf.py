@@ -9,16 +9,16 @@ from sqlalchemy import (
     Table,
     MetaData,
     func,
-    text,
     Column,
     Row,
     String,
+    Connection,
 )
 from sqlalchemy.orm import Session
 from contextlib import contextmanager
 from typing import Generator, Sequence
 import pandas as pd
-import nflogic
+import nflogic.api
 
 from flowat.data import db
 
@@ -86,7 +86,7 @@ def read_flowat_revenues(engine: Engine = db.DB_ENGINE) -> pd.DataFrame:
 
 @contextmanager
 def _set_temporary_table(
-    *columns: Column, metadata: MetaData, engine: Engine
+    *columns: Column, metadata: MetaData, connection: Connection
 ) -> Generator[Table, None, None]:
     try:
         TMP_TABLE = Table(
@@ -95,10 +95,10 @@ def _set_temporary_table(
             *columns,
             prefixes=["TEMPORARY"],
         )
-        TMP_TABLE.create(bind=engine, checkfirst=True)
+        TMP_TABLE.create(bind=connection, checkfirst=True)
         yield TMP_TABLE
     finally:
-        TMP_TABLE.drop(bind=engine, checkfirst=True)
+        TMP_TABLE.drop(bind=connection, checkfirst=True)
 
 
 def get_new_seller_data(
@@ -114,20 +114,23 @@ def get_new_seller_data(
     # NOTE: use temporary table INSERT to avoid using a SELECT statement with a large
     #       NOT IN clause
     with Session(bind=nf_engine) as ses:
+        connection = ses.connection()
         with _set_temporary_table(
             Column("DocId", String, primary_key=True),
             metadata=NF_TABLE.metadata,
-            engine=nf_engine,
+            connection=connection,
         ) as TMP_TABLE:
             if registered_docs:
-                ses.execute(insert(TMP_TABLE), [{"DocId": i} for i in registered_docs])
+                connection.execute(
+                    insert(TMP_TABLE), [{"DocId": i} for i in registered_docs]
+                )
             stmt = select(
                 NF_TABLE.c.Id,
                 NF_TABLE.c.ChaveNFe,
                 NF_TABLE.c.DataHoraEmi,
                 NF_TABLE.c.TotalProdutos,
             ).where(not_(exists().where(TMP_TABLE.c.DocId == NF_TABLE.c.ChaveNFe)))
-            res = ses.execute(stmt)
+            res = connection.execute(stmt)
             return res.all()
 
 
@@ -142,17 +145,20 @@ def count_new_seller_data(
     registered_docs = _get_registered_document_identifiers(engine=internal_engine)
     NF_TABLE = _get_table_by_name(table_name=seller_name.table_name, engine=nf_engine)
     with Session(bind=nf_engine) as ses:
+        connection = ses.connection()
         with _set_temporary_table(
             Column("DocId", String, primary_key=True),
             metadata=NF_TABLE.metadata,
-            engine=nf_engine,
+            connection=connection,
         ) as TMP_TABLE:
             if registered_docs:
-                ses.execute(insert(TMP_TABLE), [{"DocId": i} for i in registered_docs])
+                connection.execute(
+                    insert(TMP_TABLE), [{"DocId": i} for i in registered_docs]
+                )
             stmt = select(func.count(NF_TABLE.c.ChaveNFe)).where(
                 not_(exists().where(TMP_TABLE.c.DocId == NF_TABLE.c.ChaveNFe))
             )
-            res = ses.execute(stmt)
+            res = connection.execute(stmt)
             return res.scalar_one()
 
 
