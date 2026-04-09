@@ -38,31 +38,39 @@ def report_entry(
     on_action2: Callable | None = None,
     add_divider: bool = True,
 ) -> Box:
-     container = Column(
+    button_style = (
+        style.SIMPLE_SMALL_BUTTON
+        if current_platform != "windows"
+        else style.SIMPLE_BUTTON
+    )
+    rightmost_button_style = (
+        style.RIGHTMOST_SIMPLE_SMALL_BUTTON
+        if current_platform != "windows"
+        else style.RIGHTMOST_SIMPLE_BUTTON
+    )
+    title_size = 12 if current_platform != "windows" else 11
+    desc_size = 10 if current_platform != "windows" else 9
+    container = Column(
         children=[
             Row(
-                style=Pack(align_items="center", width=style.CONTENT_WIDTH-1),
+                style=Pack(align_items="center", width=style.CONTENT_WIDTH - 1),
                 children=[
                     Column(
                         children=[
-                            Label(title, style=Pack(font_size=12)),
-                            Label(description, style=Pack(font_size=10))
+                            Label(title, style=Pack(font_size=title_size)),
+                            Label(description, style=Pack(font_size=desc_size)),
                         ]
                     ),
                     Box(style=Pack(flex=1)),
-                    Button(action1, style=style.SIMPLE_SMALL_BUTTON, on_press=on_action1),
-                    Button(
-                        action2,
-                        style=style.RIGHTMOST_SIMPLE_SMALL_BUTTON,
-                        on_press=on_action2
-                    ),
-                ]
+                    Button(action1, style=button_style, on_press=on_action1),
+                    Button(action2, style=rightmost_button_style, on_press=on_action2),
+                ],
             ),
         ]
-     )
-     if add_divider:
+    )
+    if add_divider:
         container.add(Divider(style=Pack(margin_top=10, margin_bottom=10)))
-     return container
+    return container
 
 
 class ReportSection(BaseSection):
@@ -83,8 +91,7 @@ class ReportSection(BaseSection):
         )
         self.main_container = Column(children=[self.example_item, self.example_item2])
         self.full_contents = ScrollContainer(
-            style=Pack(width=style.CONTENT_WIDTH),
-            content=self.main_container
+            style=Pack(width=style.CONTENT_WIDTH), content=self.main_container
         )
 
     def show_main_content(self, widget: Button | None = None):

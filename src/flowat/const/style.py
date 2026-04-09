@@ -59,8 +59,8 @@ HEADING2 = Pack(
 BIG_BUTTON = Pack(width=220, margin=5)
 BIG_SQUARE_BUTTON = Pack(width=52, height=52, margin=5)
 if platform == "win32":
-    SIMPLE_BUTTON = Pack(width=90, margin=(0, 2))
-    RIGHTMOST_SIMPLE_BUTTON = Pack(width=90, margin=(0, 0, 0, 2))
+    SIMPLE_BUTTON = Pack(width=70, margin=(0, 2))
+    RIGHTMOST_SIMPLE_BUTTON = Pack(width=70, margin=(0, 0, 0, 2))
     SIMPLE_SMALL_BUTTON = Pack(height=24, font_size=7, margin=2)
     RIGHTMOST_SIMPLE_SMALL_BUTTON = Pack(height=24, font_size=7, margin=(2, 0, 2, 2))
     SIMPLE_SQUARE_BUTTON = Pack(width=36, margin=(0, 2))
