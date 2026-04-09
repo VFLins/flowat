@@ -81,8 +81,8 @@ class MainSection(BaseSection):
                 self.preferences_button,
             ],
         )
-        self.context_container = Box(
-            style=Pack(direction="column", align_items="center", flex=1),
+        self.context_container = Row(
+            style=Pack(align_items="center", flex=1, width=style.CONTENT_WIDTH),
             children=[self.expense_section.full_contents],
         )
         self.full_contents = Box(

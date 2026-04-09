@@ -298,7 +298,6 @@ class RevenuesSection(BaseSection):
         alignment. It's styling is defined externally via function call.
         """
         self.full_contents = Box(
-            style=Pack(align_items="center", flex=1, direction="row"),
             children=[self.main_container],
         )
         """Always holds only `RevenuesSection.main_container` and handles horizontal

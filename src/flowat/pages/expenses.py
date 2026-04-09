@@ -213,7 +213,7 @@ class ExpensesSection(BaseSection):
         )
 
         self.main_container = Box(
-            style=style.CENTERED_MAIN_CONTAINER, children=[self._get_main_container()]
+            children=[self._get_main_container()]
         )
         self.full_contents = Box(
             style=Pack(align_items="center", flex=1, direction="column"),
