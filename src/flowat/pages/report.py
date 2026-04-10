@@ -57,7 +57,10 @@ def report_entry(
                 children=[
                     Column(
                         children=[
-                            Label(title, style=Pack(font_size=title_size)),
+                            Label(
+                                title,
+                                style=Pack(font_size=title_size, font_weight="bold"),
+                            ),
                             Label(description, style=Pack(font_size=desc_size)),
                         ]
                     ),
@@ -77,19 +80,20 @@ class ReportSection(BaseSection):
     def __init__(self, app):
         super().__init__(app=app)
         self.example_item = report_entry(
-            title="Exemplo de entrada",
-            description="Uma descrição mais detalhada do que isso faz",
+            title="Balanço financeiro",
+            description="Fluxo de entradas e saídas do caixa, com saldo mensal",
             action1="Ver",
             action2="Imprimir",
         )
         self.example_item2 = report_entry(
-            title="Outro exemplo de entrada",
-            description="Uma descrição mais detalhada do que isso faz",
+            title="Ticket médio",
+            description="Valor médio das entradas no caixa",
             action1="Ver",
             action2="Imprimir",
-            add_divider=False,
         )
-        self.main_container = Column(children=[self.example_item, self.example_item2])
+        self
+        self.report_options = Column(children=[self.example_item, self.example_item2])
+        self.main_container = Box(children=[self.report_options])
         self.full_contents = ScrollContainer(
             style=Pack(width=style.CONTENT_WIDTH), content=self.main_container
         )
