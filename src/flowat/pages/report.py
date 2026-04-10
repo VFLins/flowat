@@ -32,28 +32,27 @@ from flowat.form.date import HorizontalDateForm
 def report_entry(
     title: str,
     description: str,
-    action1: str,
-    action2: str,
-    on_action1: Callable | None = None,
-    on_action2: Callable | None = None,
+    action_name: str,
+    on_action: Callable | None = None,
     add_divider: bool = True,
 ) -> Box:
+    title_size = 11
+    desc_size = 9
+    content_width = style.CONTENT_WIDTH - 1
     button_style = (
         style.SIMPLE_SMALL_BUTTON
         if current_platform != "windows"
         else style.SIMPLE_BUTTON
     )
     rightmost_button_style = (
-        style.RIGHTMOST_SIMPLE_SMALL_BUTTON
-        if current_platform != "windows"
-        else style.RIGHTMOST_SIMPLE_BUTTON
+        Pack(font_weight="bold", font_size=title_size)
+        if current_platform == "windows"
+        else style.RIGHTMOST_SIMPLE_SMALL_BUTTON
     )
-    title_size = 12 if current_platform != "windows" else 11
-    desc_size = 10 if current_platform != "windows" else 9
     container = Column(
         children=[
             Row(
-                style=Pack(align_items="center", width=style.CONTENT_WIDTH - 1),
+                style=Pack(align_items="center", width=content_width),
                 children=[
                     Column(
                         children=[
@@ -65,34 +64,42 @@ def report_entry(
                         ]
                     ),
                     Box(style=Pack(flex=1)),
-                    Button(action1, style=button_style, on_press=on_action1),
-                    Button(action2, style=rightmost_button_style, on_press=on_action2),
+                    Button(action_name, style=rightmost_button_style, on_press=on_action),
                 ],
             ),
         ]
     )
     if add_divider:
-        container.add(Divider(style=Pack(margin_top=10, margin_bottom=10)))
+        container.add(Divider(style=Pack(margin=(10, 0), width=content_width)))
     return container
 
 
 class ReportSection(BaseSection):
     def __init__(self, app):
         super().__init__(app=app)
-        self.example_item = report_entry(
+        self.report_balance_entry = report_entry(
             title="Balanço financeiro",
             description="Fluxo de entradas e saídas do caixa, com saldo mensal",
-            action1="Ver",
-            action2="Imprimir",
+            action_name="➔",
         )
-        self.example_item2 = report_entry(
+        self.report_topay_entry = report_entry(
+            title="Próximas contas à pagar",
+            description="Relação de dívidas com vencimento próximo",
+            action_name="➔",
+        )
+        self.report_avgticket_entry = report_entry(
             title="Ticket médio",
             description="Valor médio das entradas no caixa",
-            action1="Ver",
-            action2="Imprimir",
+            action_name="➔",
+            add_divider=False,
         )
-        self
-        self.report_options = Column(children=[self.example_item, self.example_item2])
+        self.report_options = Column(
+            children=[
+                self.report_balance_entry,
+                self.report_topay_entry,
+                self.report_avgticket_entry,
+            ]
+        )
         self.main_container = Box(children=[self.report_options])
         self.full_contents = ScrollContainer(
             style=Pack(width=style.CONTENT_WIDTH), content=self.main_container
