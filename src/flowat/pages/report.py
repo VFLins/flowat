@@ -13,6 +13,7 @@ from toga.widgets.optioncontainer import OptionContainer
 from toga.widgets.scrollcontainer import ScrollContainer
 from toga.dialogs import InfoDialog, ConfirmDialog, SelectFolderDialog
 from toga.style import Pack
+from toga.icons import Icon
 from toga.platform import current_platform
 
 from datetime import date, datetime
@@ -32,40 +33,29 @@ from flowat.form.date import HorizontalDateForm
 def report_entry(
     title: str,
     description: str,
-    action_name: str,
+    action_face: str | Icon,
     on_action: Callable | None = None,
     add_divider: bool = True,
 ) -> Box:
     title_size = 11
     desc_size = 9
     content_width = style.CONTENT_WIDTH - 1
-    button_style = (
-        style.SIMPLE_SMALL_BUTTON
-        if current_platform != "windows"
-        else style.SIMPLE_BUTTON
-    )
-    rightmost_button_style = (
-        Pack(font_weight="bold", font_size=title_size)
-        if current_platform == "windows"
-        else style.RIGHTMOST_SIMPLE_SMALL_BUTTON
+    button_style = Pack(font_weight="bold", font_size=title_size)
+    if isinstance(action_face, str):
+        action_button = Button(action_face, style=button_style, on_press=on_action)
+    else:
+        action_button = Button(icon=action_face, style=button_style, on_press=on_action)
+    annotations = Column(
+        children=[
+            Label(title, style=Pack(font_size=title_size, font_weight="bold")),
+            Label(description, style=Pack(font_size=desc_size)),
+        ]
     )
     container = Column(
         children=[
             Row(
                 style=Pack(align_items="center", width=content_width),
-                children=[
-                    Column(
-                        children=[
-                            Label(
-                                title,
-                                style=Pack(font_size=title_size, font_weight="bold"),
-                            ),
-                            Label(description, style=Pack(font_size=desc_size)),
-                        ]
-                    ),
-                    Box(style=Pack(flex=1)),
-                    Button(action_name, style=rightmost_button_style, on_press=on_action),
-                ],
+                children=[annotations, Box(style=Pack(flex=1)), action_button],
             ),
         ]
     )
@@ -80,17 +70,17 @@ class ReportSection(BaseSection):
         self.report_balance_entry = report_entry(
             title="Balanço financeiro",
             description="Fluxo de entradas e saídas do caixa, com saldo mensal",
-            action_name="➔",
+            action_face=">",
         )
         self.report_topay_entry = report_entry(
             title="Próximas contas à pagar",
             description="Relação de dívidas com vencimento próximo",
-            action_name="➔",
+                action_face=">",
         )
         self.report_avgticket_entry = report_entry(
             title="Ticket médio",
             description="Valor médio das entradas no caixa",
-            action_name="➔",
+            action_face=">",
             add_divider=False,
         )
         self.report_options = Column(

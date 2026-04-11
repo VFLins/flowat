@@ -13,6 +13,9 @@ MONEY_OUT = Icon(path=Path(_RESOURCES_DIR, "money-out-32"), system=True)
 BAR_CHART = Icon(path=Path(_RESOURCES_DIR, "chart-column-32"), system=True)
 SETTINGS = Icon(path=Path(_RESOURCES_DIR, "settings-32"), system=True)
 
+RIGHT = Icon(path=Path(_RESOURCES_DIR, "right"), system=True)
+LEFT = Icon(path=Path(_RESOURCES_DIR, "left"), system=True)
+
 with IMG.open(Path(_RESOURCES_DIR, "item-missing-symbolic-256.png")) as img:
     MISSING_ITEM_IMG = Image(img)
 
