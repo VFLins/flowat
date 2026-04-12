@@ -1,4 +1,5 @@
 from toga.widgets.activityindicator import ActivityIndicator
+from toga.widgets.numberinput import NumberInput
 from toga.widgets.imageview import ImageView
 from toga.widgets.selection import Selection
 from toga.widgets.textinput import TextInput
@@ -17,7 +18,7 @@ from toga.icons import Icon
 from toga.platform import current_platform
 
 from datetime import date, datetime
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 import asyncio
 import nflogic
 
@@ -64,6 +65,48 @@ def report_entry(
     return container
 
 
+def report_screen(data_source: source._DataSource | None, page: BaseSection) -> Box:
+    def change_view(widget: Selection):
+        canvas.clear()
+        match widget.value:
+            case "Gráfico":
+                canvas.add(data_widget("plot"))
+            case _:
+                canvas.add(data_widget("table"))
+
+    def print_canvas_content(widget: Button):
+         print("canvas content, wow")
+
+    def data_widget(type: Literal["plot", "table"]) -> WebView | Table:
+        s = Pack(flex=1, width=style.FORM_WIDTH)
+        match type:
+            case "plot":
+                plot = colplot(x=[], y=[])
+                return WebView(style=s, content=plot)
+            case _:
+                    return Table(style=s, headings=["Data", "Exemplo"])
+
+    return_button = Button("Voltar", on_press=lambda w: page.show_main_content())
+    print_button = Button("Imprimir", on_press=print_canvas_content)
+    select_view = Selection(items=["Tabela", "Gráfico"], on_change=change_view)
+    select_freq = Selection(style=Pack(margin=(0, 5)), items=["Mensal", "Semanal"])
+    sample_size = NumberInput(value=6, min=1, max=52, step=1)
+    header = Row(
+        style=Pack(margin_bottom=10),
+        children=[select_view, select_freq, Box(style=Pack(flex=1)), print_button]
+    )
+    canvas = Column(style=Pack(flex=1, align_items="center"), children=[data_widget("table")])
+    footer = Row(
+        style=Pack(margin=(10, 0, 20, 0)),
+        children=[sample_size, Box(style=Pack(flex=1)), return_button]
+    )
+    return Column(
+        style=Pack(width=style.CONTENT_WIDTH, align_items="center"),
+        children=[header, canvas, footer]
+    )
+
+
+
 class ReportSection(BaseSection):
     def __init__(self, app):
         super().__init__(app=app)
@@ -71,11 +114,12 @@ class ReportSection(BaseSection):
             title="Balanço financeiro",
             description="Fluxo de entradas e saídas do caixa, com saldo mensal",
             action_face=">",
+            on_action=self.show_balance_content,
         )
         self.report_topay_entry = report_entry(
             title="Próximas contas à pagar",
             description="Relação de dívidas com vencimento próximo",
-                action_face=">",
+            action_face=">",
         )
         self.report_avgticket_entry = report_entry(
             title="Ticket médio",
@@ -83,6 +127,7 @@ class ReportSection(BaseSection):
             action_face=">",
             add_divider=False,
         )
+        self.balance_screen = report_screen(data_source=None, page=self)
         self.report_options = Column(
             children=[
                 self.report_balance_entry,
@@ -97,3 +142,10 @@ class ReportSection(BaseSection):
 
     def show_main_content(self, widget: Button | None = None):
         """Removes currently displayed elments and show a summary of revenues."""
+        self.main_container.clear()
+        self.main_container.add(self.report_options)
+
+    def show_balance_content(self, widget: Button | None = None):
+        self.main_container.clear()
+        self.main_container.add(self.balance_screen)
+
