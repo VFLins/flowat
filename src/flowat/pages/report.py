@@ -78,26 +78,35 @@ def report_screen(data_source: source._DataSource | None, page: BaseSection) -> 
          print("canvas content, wow")
 
     def data_widget(type: Literal["plot", "table"]) -> WebView | Table:
-        s = Pack(flex=1, width=style.FORM_WIDTH)
+        s = Pack(flex=1, width=style.FORM_WIDTH, height=style.FORM_WIDTH * 0.6)
         match type:
             case "plot":
                 plot = colplot(x=[], y=[])
                 return WebView(style=s, content=plot)
             case _:
-                    return Table(style=s, headings=["Data", "Exemplo"])
+                return Table(style=s, headings=["Data", "Exemplo"])
 
     return_button = Button("Voltar", on_press=lambda w: page.show_main_content())
     print_button = Button("Imprimir", on_press=print_canvas_content)
-    select_view = Selection(items=["Tabela", "Gráfico"], on_change=change_view)
-    select_freq = Selection(style=Pack(margin=(0, 5)), items=["Mensal", "Semanal"])
-    sample_size = NumberInput(value=6, min=1, max=52, step=1)
+    select_view = FormField(
+        label="Tipo",
+        input_widget=Selection(items=["Tabela", "Gráfico"], on_change=change_view)
+    )
+    select_freq = FormField(
+        label="Frequência",
+        input_widget=Selection(style=Pack(margin=(0, 5)), items=["Mensal", "Semanal"])
+    )
+    sample_size = FormField(
+        label="Quantidade",
+        input_widget=NumberInput(value=6, min=1, max=52, step=1),
+    )
     header = Row(
-        style=Pack(margin_bottom=10),
+        style=Pack(margin_bottom=10, align_items="end"),
         children=[select_view, select_freq, Box(style=Pack(flex=1)), print_button]
     )
-    canvas = Column(style=Pack(flex=1, align_items="center"), children=[data_widget("table")])
+    canvas = Column(style=Pack(align_items="center"), children=[data_widget("table")])
     footer = Row(
-        style=Pack(margin=(10, 0, 20, 0)),
+        style=Pack(margin_bottom=20, align_items="end"),
         children=[sample_size, Box(style=Pack(flex=1)), return_button]
     )
     return Column(
