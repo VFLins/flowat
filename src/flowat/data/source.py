@@ -374,3 +374,21 @@ class RevenuesSource(_DataSource):
             ],
             engine=engine,
         )
+
+
+class ReportBalanceSource(_DataSource):
+    def __init__(self, engine: Engine = DB_ENGINE):
+        stmt = select()
+        super().__init__(select_stmt=stmt, paginated=False, engine=engine)
+
+
+class ReportBalanceSource(_DataSource):
+    def __init__(self, engine: Engine = DB_ENGINE):
+        stmt = select()
+        super().__init__(select_stmt=stmt, paginated=False, engine=engine)
+
+
+class ReportBalanceSource(_DataSource):
+    def __init__(self, engine: Engine = DB_ENGINE):
+        stmt = select()
+        super().__init__(select_stmt=stmt, paginated=False, engine=engine)

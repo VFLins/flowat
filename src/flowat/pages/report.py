@@ -78,7 +78,7 @@ def report_screen(data_source: source._DataSource | None, page: BaseSection) -> 
          print("canvas content, wow")
 
     def data_widget(type: Literal["plot", "table"]) -> WebView | Table:
-        s = Pack(flex=1, width=style.FORM_WIDTH, height=style.FORM_WIDTH * 0.6)
+        s = Pack(flex=1, width=style.FORM_WIDTH, height=int(style.FORM_WIDTH * 0.6))
         match type:
             case "plot":
                 plot = colplot(x=[], y=[])
