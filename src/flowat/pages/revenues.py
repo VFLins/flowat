@@ -376,7 +376,7 @@ class RevenuesSection(BaseSection):
         result = task.result()
         print(f"INFO: User selected directory for scanning: {result}")
         if result:
-            self._scan_documents(dir_path=result)
+            asyncio.create_task(self._scan_documents(dir_path=result))
 
     async def _check_available_scanned_data(self):
         """Allows the user to add scanned data if any is available, forbids otherwise."""
@@ -399,12 +399,15 @@ class RevenuesSection(BaseSection):
             self.scan_info.text = f"Dados de {acm_count} documentos encontrados."
             self.select_scanned_revenues_button.input.enabled = True
 
-    def _scan_documents(self, dir_path: str):
+    async def _scan_documents(self, dir_path: str):
         """Handles user interaction when adding data from processed documents."""
         self.scan_activity.start()
         self.scan_info.text = "Processando documentos, aguarde..."
+        def parse_dir():
+            return nflogic.parse_dir(dir_path=dir_path, buy=False, full_parse=False)
         try:
-            nflogic.parse_dir(dir_path=dir_path, buy=False, full_parse=False)
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, parse_dir)
         finally:
             self.scan_activity.stop()
             asyncio.create_task(self._check_available_scanned_data())
