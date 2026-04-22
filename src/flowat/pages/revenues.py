@@ -373,10 +373,16 @@ class RevenuesSection(BaseSection):
 
     def nflogic_scan_response(self, task: asyncio.Task):
         """Handles user's response to the dialog invoked by `self.nflogic_scan`."""
+        def stop_activity_indicator(task: asyncio.Task):
+            _ = task
+            self.scan_activity.stop()
         result = task.result()
         print(f"INFO: User selected directory for scanning: {result}")
         if result:
-            asyncio.create_task(self._scan_documents(dir_path=result))
+            self.scan_activity.start()
+            self.scan_info.text = "Processando documentos, aguarde..."
+            task = asyncio.create_task(self._scan_documents(dir_path=result))
+            task.add_done_callback(stop_activity_indicator)
 
     async def _check_available_scanned_data(self):
         """Allows the user to add scanned data if any is available, forbids otherwise."""
@@ -392,24 +398,21 @@ class RevenuesSection(BaseSection):
             if count > 0:
                 self.AVAILABLE_SELLER_NAMES.append(seller.display_name)
                 acm_count = acm_count + count
-        self.scan_activity.stop()
         if acm_count == 0:
             self.scan_info.text = "Nenhum dado disponível para inserir."
         else:
             self.scan_info.text = f"Dados de {acm_count} documentos encontrados."
             self.select_scanned_revenues_button.input.enabled = True
+        self.scan_activity.stop()
 
     async def _scan_documents(self, dir_path: str):
         """Handles user interaction when adding data from processed documents."""
-        self.scan_activity.start()
-        self.scan_info.text = "Processando documentos, aguarde..."
         def parse_dir():
             return nflogic.parse_dir(dir_path=dir_path, buy=False, full_parse=False)
         try:
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(None, parse_dir)
         finally:
-            self.scan_activity.stop()
             asyncio.create_task(self._check_available_scanned_data())
 
     def select_scanned_revenues(self, widget: Button):
