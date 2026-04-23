@@ -376,11 +376,13 @@ class RevenuesSection(BaseSection):
         def stop_activity_indicator(task: asyncio.Task):
             _ = task
             self.scan_activity.stop()
+            self.add_scanned_data_button.enabled = True
         result = task.result()
         print(f"INFO: User selected directory for scanning: {result}")
         if result:
             self.scan_activity.start()
             self.scan_info.text = "Processando documentos, aguarde..."
+            self.add_scanned_data_button.enabled = False
             task = asyncio.create_task(self._scan_documents(dir_path=result))
             task.add_done_callback(stop_activity_indicator)
 
